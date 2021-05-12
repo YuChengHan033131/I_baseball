@@ -1,7 +1,7 @@
 ******************************************************************************
                   TI ARM Linker PC v16.9.6                     
 ******************************************************************************
->> Linked Wed Apr 14 14:52:57 2021
+>> Linked Wed May 12 08:13:23 2021
 
 OUTPUT FILE NAME:   <simple_np_cc2640r2lp_app.out>
 ENTRY POINT SYMBOL: "ResetISR"  address: 0000dae5
@@ -1723,7 +1723,7 @@ MODULE SUMMARY
        Total:                                   304     260       16     
                                                                          
     C:\Users\User\AppData\Local\Temp\
-       {65AB3840-18B3-4D93-AD85-4CCFFBCC944A}   0       0         438    
+       {AA385C23-4B31-47A7-A553-FD5E8B930E27}   0       0         438    
     +--+----------------------------------------+-------+---------+---------+
        Total:                                   0       0         438    
                                                                          

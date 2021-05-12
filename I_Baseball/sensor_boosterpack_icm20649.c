@@ -372,19 +372,6 @@ static void icm20649Callback(uint_least8_t index)
     //printf("callback\n");
     sem_post(&icm20649Sem);
 
-    //get timeStamp tick
-    Timestamp_get64(&tick);
-    uint64_t tick_int,start_tick_int,t;
-    tick_int= ((uint64_t)tick.hi << 32) | tick.lo;
-    start_tick_int= ((uint64_t)start_tick.hi << 32) |start_tick.lo;//.hi=first 32 bits in tick,.lo=lsb 32
-    t=tick_int-start_tick_int;
-    uint64_t sampleRate;
-    sampleRate=1/t;
-    Display_printf(displayOut,0,0,"time:%.3f rate:%.3f",t,sampleRate);
-
-
-
-
 }
 /*********************************************************************
  * for testing
@@ -416,11 +403,16 @@ static void icm20649Callback(uint_least8_t index)
  void* test_icm2049_TaskFxn(void *arg0){
      /* Initialize the task */
      movementTaskInit();
-     //get timeStamp frequency
-     Timestamp_getFreq(&freq);
 
      uint8_t data[20]={0xbb,0xbb,0xbb,0xbb,0xbb,0};
-
+     enqueue(data);
+     uint8_t j;
+     sleep(1);
+     for(j=0;j<10;j=j+1){
+          sleep(1);
+          data[0]=j;
+          enqueue(data);
+     }
      static uint8_t sensordata[20] = {0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20};
      uint8_t data_acc[6] = {1};
      uint8_t data_gyro[6] = {1};

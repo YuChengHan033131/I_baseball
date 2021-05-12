@@ -189,7 +189,7 @@ all: $(OBJS) $(CMD_SRCS) $(GEN_CMDS)
 	@$(MAKE) --no-print-directory -Onone "simple_np_cc2640r2lp_app.out"
 
 dependents:
-	-cd D:/Drawer/CodeComposerStudioFiles/I_baseball/simple_np_cc2640r2lp_stack_library/FlashROM_Library && $(MAKE) clean all
+	-cd D:/Drawer/CodeComposerStudioFiles/I_baseball/simple_np_cc2640r2lp_stack_library/FlashROM_Library && $(MAKE) all
 
 # Tool invocations
 simple_np_cc2640r2lp_app.out: $(OBJS) $(CMD_SRCS) $(GEN_CMDS) D:/Drawer/CodeComposerStudioFiles/I_baseball/simple_np_cc2640r2lp_stack_library/FlashROM_Library/simple_np_cc2640r2lp_stack_library.lib
