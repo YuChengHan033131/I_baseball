@@ -417,12 +417,31 @@ static void icm20649Callback(uint_least8_t index)
      uint8_t data_acc[6] = {1};
      uint8_t data_gyro[6] = {1};
      uint8_t i;
+
+
+     //time stamp
+     uint64_t tick_int,start_tick_int,t,freq_int;
+     Timestamp_get64(&start_tick);
+     //get timeStamp frequency
+      xdc_runtime_Types_FreqHz freq;
+      Timestamp_getFreq(&freq);
+      freq_int=((uint64_t)freq.hi << 32) | freq.lo;
+
      while (1)
      {
          //sleep(1);
          //set sample rate
          test_icm20649Setup(0);
          sem_wait(&icm20649Sem);
+
+         //get timeStamp tick
+         Timestamp_get64(&tick);
+         tick_int= ((uint64_t)tick.hi << 32) | tick.lo;
+         start_tick_int= ((uint64_t)start_tick.hi << 32) |start_tick.lo;//.hi=first 32 bits in tick,.lo=lsb 32
+         t=tick_int-start_tick_int;
+
+         Display_printf(displayOut,0,0,"time:%.3f",(float)t/freq_int);
+
          if(!(SensorICM20649_accRead(data_acc)&&SensorICM20649_gyroRead(data_gyro))){
              //if one of them failed
              static uint8_t error[20] = {0xee,0xee,0};
