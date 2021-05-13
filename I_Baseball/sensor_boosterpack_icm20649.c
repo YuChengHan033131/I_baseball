@@ -82,7 +82,7 @@ static uint8_t sendData[20] = {0x26,0x49,0};
 static bool div_en = false;
 
 /*TimeStamp*/
-Types_Timestamp64 start_tick,tick;
+Types_Timestamp64 tick;
 xdc_runtime_Types_FreqHz freq;
 
 
@@ -369,8 +369,11 @@ static void* icmInterruptHandlerTask(void *arg0)
  ******************************************************************************/
 static void icm20649Callback(uint_least8_t index)
 {
+    //get timeStamp tick
+    Timestamp_get64(&tick);
     //printf("callback\n");
     sem_post(&icm20649Sem);
+
 
 }
 /*********************************************************************
@@ -413,34 +416,58 @@ static void icm20649Callback(uint_least8_t index)
           data[0]=j;
           enqueue(data);
      }
-     static uint8_t sensordata[20] = {0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20};
+     static uint8_t sensordata[20] = {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
      uint8_t data_acc[6] = {1};
      uint8_t data_gyro[6] = {1};
      uint8_t i;
 
 
      //time stamp
-     uint64_t tick_int,start_tick_int,t,freq_int;
-     Timestamp_get64(&start_tick);
+     uint64_t first_int,tick_int,freq_int;
      //get timeStamp frequency
       xdc_runtime_Types_FreqHz freq;
       Timestamp_getFreq(&freq);
       freq_int=((uint64_t)freq.hi << 32) | freq.lo;
 
+      //output frequency
+      sensordata[0]=(uint8_t)(freq_int>>24);
+      sensordata[1]=(uint8_t)(freq_int>>16);
+      sensordata[2]=(uint8_t)(freq_int>>8);
+      sensordata[3]=(uint8_t)(freq_int);
+      for(j=0;j<5;j=j+1){
+           sleep(1);
+           data[0]=j;
+           enqueue(sensordata);
+      }
+
+      //data flag for node to identify
+      sensordata[0]=0x26;
+      sensordata[1]=0xa0;
+      bool first_time=1;
+
      while (1)
      {
+
          //sleep(1);
          //set sample rate
-         test_icm20649Setup(0);
+         test_icm20649Setup(1);
          sem_wait(&icm20649Sem);
 
-         //get timeStamp tick
-         Timestamp_get64(&tick);
-         tick_int= ((uint64_t)tick.hi << 32) | tick.lo;
-         start_tick_int= ((uint64_t)start_tick.hi << 32) |start_tick.lo;//.hi=first 32 bits in tick,.lo=lsb 32
-         t=tick_int-start_tick_int;
+         //convert tick to int form
+         tick_int= ((uint64_t)tick.hi << 32) | tick.lo;//get tick in interrupt callback
+         //to let tick start from the first tick
+         if(first_time){
+             first_int=tick_int;
+             first_time=0;
+         }else{
+             tick_int=tick_int-first_int;
+         }
+         //convert 64 bits to 8 bits array
+         sensordata[14]=(uint8_t)(tick_int>>24);
+         sensordata[15]=(uint8_t)(tick_int>>16);
+         sensordata[16]=(uint8_t)(tick_int>>8);
+         sensordata[17]=(uint8_t)tick_int;
 
-         Display_printf(displayOut,0,0,"time:%.3f",(float)t/freq_int);
 
          if(!(SensorICM20649_accRead(data_acc)&&SensorICM20649_gyroRead(data_gyro))){
              //if one of them failed

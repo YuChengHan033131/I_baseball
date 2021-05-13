@@ -49,9 +49,22 @@ void test_createTask(void)
 }
  extern Display_Handle displayOut;
 static void* testFxn(void *arg0){
-    uint8_t data[20]={0xcc,0xAA,0xAA,0xAA,0xAA,0};//=0xAA=1010101010=170
+    uint8_t data[20]={0xcc,0xAA,0xAA,0xAA,0xAA,0xAA,0xAA,0xAA,0xAA};//=0xAA=1010101010=170
     enqueue(data);
-    uint8_t i;
+    uint64_t num64=1023;//bin=111111111="1"*9
+    data[0]=(uint8_t)num64;
+    num64=num64>>8;
+    data[1]=(uint8_t)num64;
+    num64=num64>>8;
+    data[2]=(uint8_t)num64;
+    num64=num64>>8;
+    data[3]=(uint8_t)num64;
+    while(1){
+        enqueue(data);
+        sleep(1);
+    }
+
+
 
 
 
