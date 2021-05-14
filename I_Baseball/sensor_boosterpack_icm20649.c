@@ -450,7 +450,7 @@ static void icm20649Callback(uint_least8_t index)
 
          //sleep(1);
          //set sample rate
-         test_icm20649Setup(1);
+         test_icm20649Setup(0);
          sem_wait(&icm20649Sem);
 
          //convert tick to int form
@@ -459,6 +459,7 @@ static void icm20649Callback(uint_least8_t index)
          if(first_time){
              first_int=tick_int;
              first_time=0;
+             continue;
          }else{
              tick_int=tick_int-first_int;
          }
