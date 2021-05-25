@@ -402,7 +402,22 @@ static void icm20649Callback(uint_least8_t index)
  */
  void* test_icm2049_TaskFxn(void *arg0){
      /* Initialize the task */
-     movementTaskInit();
+     movementTaskInit(); //include initialize icm20649 register
+
+     uint8_t sampleRateDivider=0;
+     /* Set the sample rate divider of the accelerometer */
+     sensorICM20649_accSetSMPLRT_DIV(sampleRateDivider);
+     /* Set the DLPF Bandwidth of the accelerometer */
+     sensorICM20649_accSetBW(ACC_BW_5_7);
+     /* Set the range of the accelerometer */
+     SensorICM20649_accSetRange(ACC_RANGE_30G);
+     /* Set the sample rate divider of the gyroscope */
+     sensorICM20649_gyroSetSMPLRT_DIV(sampleRateDivider);
+     /* Set the DLPF Bandwidth of the gyroscope */
+     sensorICM20649_gyroSetBW(GYRO_BW_5_7);
+     /* Set the range of the gyroscope */
+     SensorICM20649_gyroSetRange(GYRO_RANGE_4000DPS);
+
 
      uint8_t data[20]={0xbb,0xbb,0xbb,0xbb,0xbb,0};
      enqueue(data);
@@ -421,7 +436,7 @@ static void icm20649Callback(uint_least8_t index)
      {
          //sleep(1);
          //set sample rate
-         test_icm20649Setup(0);
+         SensorICM20649_enable_int();
          sem_wait(&icm20649Sem);
          if(!(SensorICM20649_accRead(data_acc)&&SensorICM20649_gyroRead(data_gyro))){
              //if one of them failed
@@ -439,37 +454,4 @@ static void icm20649Callback(uint_least8_t index)
      }
 
  }
-/*************************************************************************
- * setting sensor sample rate ,digital low pass filter bandwidth, range
- *
- */
- void test_icm20649Setup (uint8_t sampleRateDivider)
- {
-     /* Set the Interrupt if new data is ready */
-     SensorICM20649_enable_int();
-     //Display_print0(displayOut, 0, 0, "ICM20649 interrupt enable success");
 
-     /* Set the sample rate divider of the accelerometer */
-     sensorICM20649_accSetSMPLRT_DIV(sampleRateDivider);
-     /* Set the DLPF Bandwidth of the accelerometer */
-     sensorICM20649_accSetBW(ACC_BW_5_7);
-     /* Set the range of the accelerometer */
-   //  SensorICM20649_accSetsample(0);
-     SensorICM20649_accSetRange(ACC_RANGE_30G);
-   //  SensorICM20649_accSetSample(0);
-
-
-
-     /* Set the sample rate divider of the gyroscope */
-     sensorICM20649_gyroSetSMPLRT_DIV(sampleRateDivider);
-     /* Set the DLPF Bandwidth of the gyroscope */
-   sensorICM20649_gyroSetBW(GYRO_BW_5_7);
-     /* Set the range of the gyroscope */
-   //  SensorICM20649_gyroSetsample(0);
-     SensorICM20649_gyroSetRange(GYRO_RANGE_4000DPS);
-   //  SensorICM20649_accSetSample(0);
-
-
-
-     //Display_print0(displayOut, 0, 0, "ICM20649 setup success");
- }
