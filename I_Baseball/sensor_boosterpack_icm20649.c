@@ -77,6 +77,7 @@ extern Display_Handle displayOut;
 static sem_t icm20649Sem;
 static sem_t publishDataSem;
 static uint8_t sendData[20] = {0x26,0x49,0};
+static uint8_t sensordata[20] = {0x26,0xa0,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
 //static uint8_t sendData_a[20] = {0x26,0x4a,0};
 //static uint8_t sendData_g[20] = {0x26,0x4b,0};
 static bool div_en = false;
@@ -369,9 +370,7 @@ static void* icmInterruptHandlerTask(void *arg0)
  ******************************************************************************/
 static void icm20649Callback(uint_least8_t index)
 {
-    //printf("callback\n");
     sem_post(&icm20649Sem);
-
 }
 /*********************************************************************
  * for testing
@@ -418,40 +417,29 @@ static void icm20649Callback(uint_least8_t index)
      /* Set the range of the gyroscope */
      SensorICM20649_gyroSetRange(GYRO_RANGE_4000DPS);
 
-
-     uint8_t data[20]={0xbb,0xbb,0xbb,0xbb,0xbb,0};
-     enqueue(data);
-     uint8_t j;
-     sleep(1);
-     for(j=0;j<10;j=j+1){
-          sleep(1);
-          data[0]=j;
-          enqueue(data);
-     }
-     static uint8_t sensordata[20] = {0x26,0xa0,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
-     uint8_t data_acc[6] = {1};
-     uint8_t data_gyro[6] = {1};
      uint8_t i;
-     while (1)
-     {
-         //sleep(1);
-         //set sample rate
-         SensorICM20649_enable_int();
-         sem_wait(&icm20649Sem);
-         if(!(SensorICM20649_accRead(data_acc)&&SensorICM20649_gyroRead(data_gyro))){
-             //if one of them failed
-             static uint8_t error[20] = {0xee,0xee,0};
-             enqueue(error);
-         }
+     for(i=0;i<10;i=i+1){
+          sleep(1);
+          sensordata[2]=i;
+          enqueue(sensordata);
+     }
+     uint16_t j;
+     for(j=0;j<100;j=j+1){//send 100 data
+         //enable raw data ready interrupt to interrupt 1
+         writeReg(REG_BANK_SEL, BANK_0);
+         writeReg(INT_ENABLE1, 0x01);
 
-         for(i = 0; i < 6; i=i+1)
-         {
-             sensordata[i+2] = data_acc[i];
-             sensordata[i+8] = data_gyro[i];
-         }
+         sem_wait(&icm20649Sem);
+         //read sensor data
+         writeReg(REG_BANK_SEL, BANK_0);
+         readReg(ACCEL_XOUT_H, &sensordata[2], 6);
+         readReg(GYRO_XOUT_H, &sensordata[8], 6);
+
          enqueue(sensordata);
+         //sendtoStore(sensordata);
 
      }
+
 
  }
 

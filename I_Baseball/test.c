@@ -51,10 +51,9 @@ void test_createTask(void)
 static void* testFxn(void *arg0){
     uint8_t data[20]={0xcc,0xAA,0xAA,0xAA,0xAA,0};//=0xAA=1010101010=170
     enqueue(data);
-    uint8_t i;
 
 
 
     //Baseball6xs_setParameter(0x00, 0x14, data);//param=0 for sending data,data bytes length,data
-
+    return ;
 }
