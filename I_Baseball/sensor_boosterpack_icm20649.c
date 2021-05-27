@@ -424,7 +424,7 @@ static void icm20649Callback(uint_least8_t index)
           enqueue(sensordata);
      }
      uint16_t j;
-     for(j=0;j<100;j=j+1){//send 100 data
+     for(j=0;j<10000;j=j+1){//send 10000 data
          //enable raw data ready interrupt to interrupt 1
          writeReg(REG_BANK_SEL, BANK_0);
          writeReg(INT_ENABLE1, 0x01);
@@ -435,10 +435,11 @@ static void icm20649Callback(uint_least8_t index)
          readReg(ACCEL_XOUT_H, &sensordata[2], 6);
          readReg(GYRO_XOUT_H, &sensordata[8], 6);
 
-         enqueue(sensordata);
-         //sendtoStore(sensordata);
-
+         //enqueue(sensordata);
+         sendtoStore(sensordata);
      }
+     //send all of the flash data through BLE
+     outputflashdata();
 
 
  }

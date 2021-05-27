@@ -66,7 +66,7 @@ extern "C"
 void flash_createTask(void);
 void openflash(void);
 void closeflash(void);
-void outputflashdata(void);
+extern void outputflashdata(void);
 //void stopflash(void);
 void sendtoStore(uint8_t *value);
 void getTime(void);

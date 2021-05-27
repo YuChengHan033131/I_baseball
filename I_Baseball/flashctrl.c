@@ -165,7 +165,7 @@ static void *flashTaskFxn(void *arg0)
                        sendData[10],sendData[11],sendData[12],sendData[13],sendData[14],sendData[15],sendData[16],sendData[17],sendData[18],sendData[19]);
 #endif
 */
-        hextostr(sendData, array);//Âà¦r¦ê
+        hextostr(sendData, array);//Âà¦r¦ê//data[20]->array[41] turn 1 bytes into 2 char ex:0x1a-> '1' 'a', last char =\n
         FLASH_write(spihandle, &array, DATA_LEN*2+1);//write
         udAddr += DATA_LEN*2+1;//address counter
         cnt = cnt + 1;
@@ -505,7 +505,6 @@ void outputflashdata(void)
     //FLASH_read(spihandle);
 
     bool empty = false;
-    int i;
 
     char    array[DATA_LEN*2+1];
     uint8_t sendData[DATA_LEN];
