@@ -77,13 +77,11 @@ extern Display_Handle displayOut;
 static sem_t icm20649Sem;
 static sem_t publishDataSem;
 static uint8_t sendData[20] = {0x26,0x49,0};
-static uint8_t sensordata[20] = {0x26,0xa0,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
 //static uint8_t sendData_a[20] = {0x26,0x4a,0};
 //static uint8_t sendData_g[20] = {0x26,0x4b,0};
 static bool div_en = false;
 
 /*TimeStamp*/
-Types_Timestamp64 start_tick,tick;
 xdc_runtime_Types_FreqHz freq;
 
 
@@ -373,11 +371,7 @@ static void icm20649Callback(uint_least8_t index)
     sem_post(&icm20649Sem);
 }
 /*********************************************************************
- * for testing
- *
- *
- *
- */
+ * for testing*/
  void test_SensorICM20649_createTask(void)
 {
     pthread_attr_t pAttrs;
@@ -417,13 +411,17 @@ static void icm20649Callback(uint_least8_t index)
      /* Set the range of the gyroscope */
      SensorICM20649_gyroSetRange(GYRO_RANGE_4000DPS);
 
+     static uint8_t sensordata[20] = {0x26,0xa1,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
      uint8_t i;
      for(i=0;i<10;i=i+1){
           sleep(1);
-          sensordata[2]=i;
+          sensordata[0]=i;
           enqueue(sensordata);
      }
+     uint32_t start_tick,tick;
+     start_tick=Timestamp_get32();
      uint16_t j;
+
      for(j=0;j<10000;j=j+1){//send 10000 data
          //enable raw data ready interrupt to interrupt 1
          writeReg(REG_BANK_SEL, BANK_0);
@@ -434,6 +432,13 @@ static void icm20649Callback(uint_least8_t index)
          writeReg(REG_BANK_SEL, BANK_0);
          readReg(ACCEL_XOUT_H, &sensordata[2], 6);
          readReg(GYRO_XOUT_H, &sensordata[8], 6);
+
+         //get timeStamp tick
+         tick=Timestamp_get32();
+         sensordata[14]=(uint8_t)((tick-start_tick)>>24);
+         sensordata[15]=(uint8_t)((tick-start_tick)>>16);
+         sensordata[16]=(uint8_t)((tick-start_tick)>>8);
+         sensordata[17]=(uint8_t)(tick-start_tick);
 
          //enqueue(sensordata);
          sendtoStore(sensordata);
