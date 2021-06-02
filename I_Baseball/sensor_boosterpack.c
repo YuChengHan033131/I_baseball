@@ -64,6 +64,7 @@
 #include "Board.h"
 #include "platform.h"
 
+extern sem_t BLEconnected;
 /*******************************************************************************
  *                             VARIABLES
  ******************************************************************************/
@@ -905,6 +906,7 @@ static void Baseball6xs_processCharChangeEvt(uint8_t paramID)
                     HwiP_disableInterrupt(40);
                     MAP_ADC14_disableConversion();
                     SensorICM20649_Activate(false);
+                    sem_post(&BLEconnected);
                 }
                 else if(Baseball6xsConfig != 0x12 && newValue == 0x12)
                 {

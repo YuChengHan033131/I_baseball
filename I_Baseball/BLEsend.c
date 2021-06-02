@@ -48,8 +48,8 @@
 #include "BLEsend.h"
 #include "Board.h"
 #include "sensor_configuration.h"
-//#include "fatsd.h"
 
+extern sem_t BLEinitDone;
 /*******************************************************************************
  *                             LOCAL VARIABLES
  ******************************************************************************/
@@ -140,7 +140,7 @@ static void *BLEsendTaskFxn(void *arg0)
 
     // Initialize the task
     ringbuffer_init();
-
+    sem_post(&BLEinitDone);
     while (1)
     {
         dequeue(sendData);

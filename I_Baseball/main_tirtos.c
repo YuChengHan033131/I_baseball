@@ -40,6 +40,7 @@
 #include <ti/drivers/UART.h>
 #include <ti/drivers/I2C.h>
 #include <ti/drivers/SPI.h>
+#include <semaphore.h>
 #include "Board.h"
 #include "flashctrl.h"
 #include "BLEsend.h"
@@ -58,6 +59,9 @@
 //test declare
 #include "test.h"
 Display_Handle displayOut;
+
+sem_t BLEinitDone;
+sem_t BLEconnected;
 void main()
 {
     /* Call board initialization functions */
@@ -67,6 +71,8 @@ void main()
     Timer_init();
     I2C_init();
     SPI_init();
+    sem_init(&BLEinitDone,1,0);//allow other thread , initial value =0
+    sem_init(&BLEconnected,1,0);
 
     displayOut = Display_open(Display_Type_HOST | Display_Type_UART, NULL);
 

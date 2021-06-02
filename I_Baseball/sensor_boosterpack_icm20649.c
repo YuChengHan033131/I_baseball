@@ -56,6 +56,9 @@
 /*******************************************************************************
  *                             VARIABLES
  ******************************************************************************/
+/* GLOBAL variable*/
+extern sem_t BLEconnected;
+extern sem_t BLEinitDone;
 /* Task setup */
 pthread_t icm20649Task;
 pthread_t icmSensorTask;
@@ -413,15 +416,23 @@ static void icm20649Callback(uint_least8_t index)
 
      static uint8_t sensordata[20] = {0x26,0xa1,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
      uint8_t i;
-     for(i=0;i<10;i=i+1){
+
+     //wait until icm20649 wakeup from sleep
+     sem_wait(&BLEinitDone);
+    //wait until BLE connected
+     sem_wait(&BLEconnected);
+
+
+     for(i=0;i<5;i=i+1){
           sleep(1);
-          sensordata[0]=i;
+          sensordata[0]=5-i;
           enqueue(sensordata);
      }
      uint32_t start_tick,tick;
      start_tick=Timestamp_get32();
      uint16_t j;
-
+     sensordata[0]=0x26;
+     sensordata[1]=0xa1;
      for(j=0;j<10000;j=j+1){//send 10000 data
          //enable raw data ready interrupt to interrupt 1
          writeReg(REG_BANK_SEL, BANK_0);
