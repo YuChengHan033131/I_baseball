@@ -397,6 +397,11 @@ static void icm20649Callback(uint_least8_t index)
  * function use in test_SensorICM20649_createTask(void)
  */
  void* test_icm2049_TaskFxn(void *arg0){
+     //wait until icm20649 wakeup from sleep
+     sem_wait(&BLEinitDone);
+    //wait until BLE connected
+     sem_wait(&BLEconnected);
+
      /* Initialize the task */
      movementTaskInit(); //include initialize icm20649 register
 
@@ -413,49 +418,41 @@ static void icm20649Callback(uint_least8_t index)
      sensorICM20649_gyroSetBW(GYRO_BW_5_7);
      /* Set the range of the gyroscope */
      SensorICM20649_gyroSetRange(GYRO_RANGE_4000DPS);
+     /*enable FIFO*/
+     writeReg(REG_BANK_SEL, BANK_0);
+     writeReg(USER_CTRL, 0x40);
+     /*enable acc & gyro write to FIFO*/
+     writeReg(REG_BANK_SEL, BANK_0);
+     writeReg(FIFO_EN_2, 0x1E);
+
+
 
      static uint8_t sensordata[20] = {0x26,0xa1,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
-     uint8_t i;
-
-     //wait until icm20649 wakeup from sleep
-     sem_wait(&BLEinitDone);
-    //wait until BLE connected
-     sem_wait(&BLEconnected);
-
+     uint16_t i,j,k;
 
      for(i=0;i<5;i=i+1){
           sleep(1);
           sensordata[0]=5-i;
           enqueue(sensordata);
      }
-     uint32_t start_tick,tick;
-     start_tick=Timestamp_get32();
-     uint16_t j;
-     sensordata[0]=0x26;
-     sensordata[1]=0xa1;
-     for(j=0;j<10000;j=j+1){//send 10000 data
-         //enable raw data ready interrupt to interrupt 1
-         writeReg(REG_BANK_SEL, BANK_0);
-         writeReg(INT_ENABLE1, 0x01);
+     //uint32_t start_tick,tick;
+     //start_tick=Timestamp_get32();
 
+     for(i=0;i<20;i=i+2){
+         //enable FIFO water mark to interrupt 1
+         writeReg(REG_BANK_SEL, BANK_0);
+         writeReg(INT_ENABLE3, 0x01);
          sem_wait(&icm20649Sem);
-         //read sensor data
+         //read data number in FIFO
          writeReg(REG_BANK_SEL, BANK_0);
-         readReg(ACCEL_XOUT_H, &sensordata[2], 6);
-         readReg(GYRO_XOUT_H, &sensordata[8], 6);
-
-         //get timeStamp tick
-         tick=Timestamp_get32();
-         sensordata[14]=(uint8_t)((tick-start_tick)>>24);
-         sensordata[15]=(uint8_t)((tick-start_tick)>>16);
-         sensordata[16]=(uint8_t)((tick-start_tick)>>8);
-         sensordata[17]=(uint8_t)(tick-start_tick);
+         readReg(FIFO_COUNT_H, &sensordata[i], 2);
 
          //enqueue(sensordata);
-         sendtoStore(sensordata);
+         //sendtoStore(sensordata);
      }
+     enqueue(sensordata);
      //send all of the flash data through BLE
-     outputflashdata();
+     //outputflashdata();
 
 
  }
