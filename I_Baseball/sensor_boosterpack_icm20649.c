@@ -397,13 +397,14 @@ static void icm20649Callback(uint_least8_t index)
  * function use in test_SensorICM20649_createTask(void)
  */
  void* test_icm2049_TaskFxn(void *arg0){
-     //wait until icm20649 wakeup from sleep
-     sem_wait(&BLEinitDone);
-    //wait until BLE connected
-     sem_wait(&BLEconnected);
 
      /* Initialize the task */
      movementTaskInit(); //include initialize icm20649 register
+     sem_wait(&BLEinitDone);
+     sem_wait(&BLEconnected);
+     //caution! register setting must be done after BLE init & connected in case of error happen
+     //because setting may failed while sensor in sleep mode
+
 
      uint8_t sampleRateDivider=0;
      /* Set the sample rate divider of the accelerometer */
@@ -418,41 +419,67 @@ static void icm20649Callback(uint_least8_t index)
      sensorICM20649_gyroSetBW(GYRO_BW_5_7);
      /* Set the range of the gyroscope */
      SensorICM20649_gyroSetRange(GYRO_RANGE_4000DPS);
+     /* The accel sensor needs max 30ms, the gyro max 35ms to fully start */
+     usleep(50000);
      /*enable FIFO*/
      writeReg(REG_BANK_SEL, BANK_0);
      writeReg(USER_CTRL, 0x40);
-     /*enable acc & gyro write to FIFO*/
-     writeReg(REG_BANK_SEL, BANK_0);
-     writeReg(FIFO_EN_2, 0x1E);
 
 
+     static uint8_t sensordata[20] = {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
+     uint16_t i, j, seqNum=0;
 
-     static uint8_t sensordata[20] = {0x26,0xa1,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
-     uint16_t i,j,k;
-
-     for(i=0;i<5;i=i+1){
+     for(i=0;i<3;i=i+1){
           sleep(1);
-          sensordata[0]=5-i;
+          sensordata[0]=3-i;
           enqueue(sensordata);
      }
-     //uint32_t start_tick,tick;
-     //start_tick=Timestamp_get32();
+     //flag
+     sensordata[0]=0x26;
+     sensordata[1]=0xa2;
 
-     for(i=0;i<20;i=i+2){
+
+
+     /*reset FIFO*/
+     writeReg(REG_BANK_SEL, BANK_0);
+     writeReg(FIFO_RST, 0x0f);//not sure which value can acutally reset
+     writeReg(REG_BANK_SEL, BANK_0);
+     writeReg(FIFO_RST, 0x00);
+
+     /*enable acc & gyro write to FIFO*/
+     writeReg(REG_BANK_SEL, BANK_0);
+     writeReg(FIFO_EN_2, 0x1e);//acc & gyr
+
+     for(i=0;i<58;i=i+1){//almot 10000 times of sampeling
          //enable FIFO water mark to interrupt 1
          writeReg(REG_BANK_SEL, BANK_0);
          writeReg(INT_ENABLE3, 0x01);
          sem_wait(&icm20649Sem);
-         //read data number in FIFO
-         writeReg(REG_BANK_SEL, BANK_0);
-         readReg(FIFO_COUNT_H, &sensordata[i], 2);
+         //test: disable data write after reach FIFO water mark
+         /*disable acc & gyro write to FIFO*/
+         // writeReg(REG_BANK_SEL, BANK_0);
+         // writeReg(FIFO_EN_2, 0x00);
 
-         //enqueue(sensordata);
-         //sendtoStore(sensordata);
+
+         for(j=0;j<2052;j=j+12){
+             //read data number in FIFO
+            writeReg(REG_BANK_SEL, BANK_0);
+            readReg(FIFO_COUNT_H, &sensordata[16], 2);
+            writeReg(REG_BANK_SEL, BANK_0);
+            readReg(FIFO_R_W, &sensordata[ 2], 12);
+            //order: acc x_H//acc x_L//acc y_H//acc y_L//acc z_H//acc z_L///gyr x_H//gyr x_L//gyr y_H;//gyr y_L//gyr z_H//gyr z_L
+            //usleep(10000);
+            //enqueue(sensordata);
+            //add seqNum
+            sensordata[14]=(uint8_t)(seqNum>>8);
+            sensordata[15]=(uint8_t)seqNum;
+            seqNum+=1;
+            sendtoStore(sensordata);
+         }
+
      }
-     enqueue(sensordata);
      //send all of the flash data through BLE
-     //outputflashdata();
+     outputflashdata();
 
 
  }
