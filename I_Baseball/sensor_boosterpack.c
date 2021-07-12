@@ -41,6 +41,7 @@
 #include <time.h>
 #include <unistd.h>
 #include <ti/display/Display.h>
+#define DISPLAY_DISABLE//disable display in this file
 #include <ti/drivers/dpl/HwiP.h>
 #include <ti/drivers/GPIO.h>
 #include <ti/drivers/UART.h>
@@ -289,10 +290,12 @@ static void AP_init(void)
     params.timerCallback = AP_timerHandler;
 
     timer0 = Timer_open(Board_Timer0, &params);
+#ifndef DISPLAY_DISABLE
     if (timer0 == NULL)
     {
         Display_print0(displayOut, 0, 0, "Failed to initialized Timer!\n");
     }
+#endif
 
     /* Initialize clock of Flashctrl */
     clock_init();
@@ -305,9 +308,11 @@ static void AP_init(void)
 
 
     /* Write to the UART. */
+#ifndef DISPLAY_DISABLE
     Display_print0(displayOut,0,0,
             "--------- Sensor Booster Pack Example ---------");
     Display_print0(displayOut,0,0,"Application Processor Initializing... ");
+#endif
 }
 
 /*******************************************************************************
@@ -335,8 +340,9 @@ static void *AP_taskFxn(void *arg0)
 
     /* Initialize application */
     AP_init();
-
+#ifndef DISPLAY_DISABLE
     Display_print0(displayOut,0,0,"Done!");
+#endif
     sleep(1);//test
     while(1)
     {
@@ -389,9 +395,11 @@ static void *AP_taskFxn(void *arg0)
 
                 if (apEvent != AP_EVT_PUI)
                 {
+#ifndef DISPLAY_DISABLE
                     Display_printf(displayOut, 0, 0,
                                    "[bleThread] Warning! Unexpected Event %lu",
                                    apEvent);
+#endif
                 }
             }
             while (apEvent != AP_EVT_PUI);
@@ -422,7 +430,9 @@ static void *AP_taskFxn(void *arg0)
         {
             /* Turn on user LED to indicate advertising */
             GPIO_write(Board_LED0, Board_LED_ON);
+#ifndef DISPLAY_DISABLE
             Display_print0(displayOut,0,0, "Starting advertisement... ");
+#endif
 
             /* Setting Advertising Name */
             SAP_setServiceParam(SNP_GGS_SERV_ID, SNP_GGS_DEVICE_NAME_ATT,
@@ -447,17 +457,19 @@ static void *AP_taskFxn(void *arg0)
 
                 if (apEvent != AP_EVT_ADV_ENB)
                 {
+#ifndef DISPLAY_DISABLE
                     Display_printf(displayOut, 0, 0,
                                    "[bleThread] Warning! Unexpected Event %lu",
                                    apEvent);
+#endif
                 }
             }
             while (apEvent != AP_EVT_ADV_ENB);
-
+#ifndef DISPLAY_DISABLE
             Display_print0(displayOut,0,0, "Done!");
             Display_print0(displayOut,0,0,
                     "Waiting for connection (or timeout)... ");
-
+#endif
             /* Wait for connection or button press to cancel advertisement */
             clock_gettime(CLOCK_REALTIME, &ts);
             ts.tv_sec += 60;
@@ -472,7 +484,9 @@ static void *AP_taskFxn(void *arg0)
             else
             {
                 state = AP_CANCEL_ADV;
+#ifndef DISPLAY_DISABLE
                 Display_print0(displayOut, 0, 0,"Advertisement Timeout!");
+#endif
             }
         }
             break;
@@ -487,15 +501,18 @@ static void *AP_taskFxn(void *arg0)
 
                 if (apEvent != AP_EVT_ADV_END)
                 {
+#ifndef DISPLAY_DISABLE
                     Display_printf(displayOut, 0, 0,
                                    "[bleThread] Warning! Unexpected Event %lu",
                                    apEvent);
+#endif
                 }
             }
             while (apEvent != AP_EVT_ADV_END);
-
+#ifndef DISPLAY_DISABLE
             /* Update State and Characteristic values on LCD */
             Display_print1(displayOut,0,0,"Peer connected! (%s)", peerstr);
+#endif
 
             /* Events that can happen during connection - Client Disconnection
                                                         - AP Disconnection */
@@ -507,9 +524,11 @@ static void *AP_taskFxn(void *arg0)
 
                 if (apEvent != AP_EVT_CONN_TERM)
                 {
+#ifndef DISPLAY_DISABLE
                     Display_printf(displayOut, 0, 0,
                                    "[bleThread] Warning! Unexpected Event %lu",
                                    apEvent);
+#endif
                 }
             }
             while (apEvent != AP_EVT_CONN_TERM);
@@ -527,9 +546,11 @@ static void *AP_taskFxn(void *arg0)
                 if ((apEvent != AP_EVT_CONN_TERM)
                         && (apEvent != AP_EVT_ADV_ENB))
                 {
+#ifndef DISPLAY_DISABLE
                     Display_printf(displayOut, 0, 0,
                                    "[bleThread] Warning! Unexpected Event %lu",
                                    apEvent);
+#endif
                 }
             }
             while ((apEvent != AP_EVT_CONN_TERM)
@@ -540,7 +561,9 @@ static void *AP_taskFxn(void *arg0)
             break;
 
         case AP_CANCEL_ADV:
+#ifndef DISPLAY_DISABLE
             Display_print0(displayOut,0,0,"Advertisement has been canceled!");
+#endif
 
             /* Cancel Advertisement */
             SAP_setParam(SAP_PARAM_ADV, SAP_ADV_STATE, 1, &disableAdv);
@@ -553,9 +576,11 @@ static void *AP_taskFxn(void *arg0)
 
                 if (apEvent != AP_EVT_ADV_END)
                 {
+#ifndef DISPLAY_DISABLE
                     Display_printf(displayOut, 0, 0,
                                    "[bleThread] Warning! Unexpected Event %lu",
                                    apEvent);
+#endif
                 }
             }
             while (apEvent != AP_EVT_ADV_END);
@@ -576,7 +601,9 @@ static void *AP_taskFxn(void *arg0)
             HwiP_disableInterrupt(40);
             MAP_ADC14_disableConversion();
             */
+#ifndef DISPLAY_DISABLE
             Display_print0(displayOut,0,0,"State set to idle.");
+#endif
             GPIO_clearInt(Board_BUTTON1);
             GPIO_enableInt(Board_BUTTON1);
             ALL_Sensor_Disable();
@@ -593,9 +620,11 @@ static void *AP_taskFxn(void *arg0)
                 if ((apEvent != AP_EVT_BUTTON_RIGHT)
                         && (apEvent != AP_EVT_BSL_BUTTON))
                 {
+#ifndef DISPLAY_DISABLE
                     Display_printf(displayOut, 0, 0,
                                    "[bleThread] Warning! Unexpected Event %lu",
                                    apEvent);
+#endif
                 }
             }
             while ((apEvent != AP_EVT_BUTTON_RIGHT)
@@ -839,7 +868,9 @@ static void AP_processBaseball6xscccdCB(uint8_t charID, uint16_t value)
                 if(Baseball3xs == false && Baseball6xs == false)
                 {
                     Baseball6xs = true;
+#ifndef DISPLAY_DISABLE
                     Display_print0(displayOut,0,0,"Baseball6xs update enabled!");
+#endif
                 }
             }
             else
@@ -847,7 +878,9 @@ static void AP_processBaseball6xscccdCB(uint8_t charID, uint16_t value)
                 if(Baseball6xs == true)
                 {
                     Baseball6xs = false;
+#ifndef DISPLAY_DISABLE
                     Display_print0(displayOut,0,0,"Baseball6xs update disabled!");
+#endif
                 }
             }
             break;
@@ -885,7 +918,9 @@ static void Baseball6xs_processCharChangeEvt(uint8_t paramID)
                 /* Reset characteristics */
                 initBaseball6xsCharacteristicValue(BASEBALL6xs_DATA, 0, BASEBALL6xs_DATA_LEN);
 
+#ifndef DISPLAY_DISABLE
                 Display_print0(displayOut, 0, 0, "ADC disabled!");
+#endif
 
             }
             else
@@ -970,7 +1005,9 @@ static void AP_processBaseball3xscccdCB(uint8_t charID, uint16_t value)
                 if(Baseball3xs == false && Baseball6xs == false)
                 {
                     Baseball3xs = true;
+#ifndef DISPLAY_DISABLE
                     Display_print0(displayOut,0,0,"Baseball3xs update enabled!");
+#endif
                 }
             }
             else
@@ -978,7 +1015,9 @@ static void AP_processBaseball3xscccdCB(uint8_t charID, uint16_t value)
                 if(Baseball3xs == true)
                 {
                     Baseball3xs = false;
+#ifndef DISPLAY_DISABLE
                     Display_print0(displayOut,0,0,"Baseball3xs update disabled!");
+#endif
                 }
             }
             break;

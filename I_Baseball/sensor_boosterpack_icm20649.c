@@ -42,6 +42,7 @@
 #include <pthread.h>
 #include <ti/drivers/I2C.h>
 #include <ti/display/Display.h>
+#define DISPLAY_DISABLE
 #include <Profile/baseball6xs_service.h>
 #include <sensor_boosterpack_icm20649.h>
 #include <sensor_driver/icm20649.h>
@@ -202,7 +203,9 @@ static void movementTaskInit(void)
     /* Initialize characteristics and sensor driver */
     //sensorPeriod = ICM20649_DEFAULT_PERIOD;
     success = SensorICM20649_init();
+#ifndef DISPLAY_DISABLE
     if(success) Display_print0(displayOut, 0, 0, "ICM20649 initial success");
+#endif
 
     /* Setting GPIO Callbacks */
     GPIO_setCallback(ICM20649_INT, &icm20649Callback);
@@ -224,8 +227,9 @@ static void icm20649Setup (void)
 {
     /* Set the Interrupt if new data is ready */
     SensorICM20649_enable_int();
-    //Display_print0(displayOut, 0, 0, "ICM20649 interrupt enable success");
-
+#ifndef DISPLAY_DISABLE
+    Display_print0(displayOut, 0, 0, "ICM20649 interrupt enable success");
+#endif
     /* Set the sample rate divider of the accelerometer */
     sensorICM20649_accSetSMPLRT_DIV(0);
     /* Set the DLPF Bandwidth of the accelerometer */
@@ -247,8 +251,9 @@ static void icm20649Setup (void)
   //  SensorICM20649_accSetSample(0);
 
 
-
-    //Display_print0(displayOut, 0, 0, "ICM20649 setup success");
+#ifndef DISPLAY_DISABLE
+    Display_print0(displayOut, 0, 0, "ICM20649 setup success");
+#endif
 }
 
 /*******************************************************************************
@@ -274,7 +279,9 @@ static void *movementTaskFxn(void *arg0)
             pthread_cond_wait(&cond, &lock);
         }
         pthread_mutex_unlock(&lock);
-        //Display_print0(displayOut, 0, 0, "ICM20649 enabled");
+#ifndef DISPLAY_DISABLE
+        Display_print0(displayOut, 0, 0, "ICM20649 enabled");
+#endif
 
         icm20649Setup();
 
@@ -310,7 +317,9 @@ static void* icmInterruptHandlerTask(void *arg0)
     {
      //   printf("hander\n");
         sem_wait(&icm20649Sem);
-        //Display_print0(displayOut, 0, 0, "ICM20649 Interrup!");
+#ifndef DISPLAY_DISABLE
+        Display_print0(displayOut, 0, 0, "ICM20649 Interrup!");
+#endif
 
         SensorICM20649_accRead(data_acc);
         SensorICM20649_gyroRead(data_gyro);

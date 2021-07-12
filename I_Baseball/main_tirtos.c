@@ -54,11 +54,10 @@
 /* Output display handle that will be used to print out all debug/log
  * statements
  */
-//Display_Handle displayOut;
-
-//test declare
-#include "test.h"
 Display_Handle displayOut;
+
+#include "test.h"
+
 
 sem_t BLEinitDone;
 sem_t BLEconnected;
@@ -74,7 +73,8 @@ void main()
     sem_init(&BLEinitDone,1,0);//allow other thread , initial value =0
     sem_init(&BLEconnected,1,0);
 
-    displayOut = Display_open(Display_Type_HOST | Display_Type_UART, NULL);
+    /*display through UART*/
+    displayOut = Display_open(Display_Type_UART, NULL);
 
     if(!SensorConfig_initI2C())
     {

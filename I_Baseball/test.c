@@ -4,7 +4,9 @@
 #include <unistd.h>//for usleep
 #include <stdbool.h>//for bool in icm20649 activate
 #include "sensor_boosterpack_icm20649.h"
-#include <ti/display/Display.h>// for display_print through tera term
+#include <ti/display/Display.h>// for display_print through serial port
+#include <semaphore.h>
+
 
 
 static pthread_t sensorTask;
@@ -49,11 +51,17 @@ void test_createTask(void)
 }
  extern Display_Handle displayOut;
 static void* testFxn(void *arg0){
-    uint8_t data[20]={0xcc,0xAA,0xAA,0xAA,0xAA,0};//=0xAA=1010101010=170
-    enqueue(data);
+    //wait until icm20649 wakeup from sleep
+    //sem_wait(&BLEinitDone);
+   //wait until BLE connected
+    //sem_wait(&BLEconnected);
+    Display_clear(displayOut);
+    uint8_t i;
+    for(i=0;i<255;i=i+1){
+        Display_printf(displayOut,0,0,"count: %d",i);
+        usleep(500);
 
-
-
-    //Baseball6xs_setParameter(0x00, 0x14, data);//param=0 for sending data,data bytes length,data
+    }
+    Display_close(displayOut);
     return ;
 }

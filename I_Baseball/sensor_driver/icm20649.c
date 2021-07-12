@@ -42,6 +42,7 @@
 * ------------------------------------------------------------------------------
 */
 #include <ti/display/Display.h>
+#define DISPLAY_DISABLE
 #include <sensor_driver/icm20649.h>
 #include <ti/posix/ccs/unistd.h>
 #include <ti/drivers/I2C.h>
@@ -100,12 +101,15 @@ bool SensorICM20649_init(void)
     while (success != true) success = writeReg(REG_BANK_SEL, BANK_0);
     success = false;
     while (success != true) success = writeReg(PWR_MGMT_1, val);
+#ifndef DISPLAY_DISABLE
     Display_print0(displayOut, 0, 0, "ICM20649 PWR_MGMT_1 success");
+#endif
 
     ret = false;
     while(ret != true) ret = SensorICM20649_test();
+#ifndef DISPLAY_DISABLE
     Display_print0(displayOut, 0, 0, "ICM20649 test success");
-
+#endif
     // Power save
     sensorICM_Sleep();
 
