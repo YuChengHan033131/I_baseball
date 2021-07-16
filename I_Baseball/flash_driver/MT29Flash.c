@@ -17,7 +17,6 @@
 #define ADDRESS_2_BLOCK(Address)    ((uint16_t) (Address >> 18))
 #define ADDRESS_2_PAGE(Address)     ((uint8_t)  ((Address >> 12) & 0x3F))
 #define ADDRESS_2_COL(Address)      ((uint16_t) (Address & 0x0FFF))
-#define DATA_LEN    20
 
 extern Display_Handle displayOut;
 SemaphoreP_Handle lockSem;
@@ -337,7 +336,7 @@ int_fast16_t FlashPageRead(SPI_Handle handle, uint_fast32_t udAddr, void *pArray
 
 }
 
-bool FLASH_read(SPI_Handle handle, char *Array)
+bool FLASH_read(SPI_Handle handle, void *Array, uint16_t count)
 {
     bool empty = false;
     int_fast16_t status = Flash_Error;
@@ -347,7 +346,7 @@ bool FLASH_read(SPI_Handle handle, char *Array)
 
     //Display_printf(displayOut, 0, 0, "bf read_remain = %d, bf read_index = %d", read_remain, read_index);
 
-    if(read_remain < DATA_LEN )
+    if(read_remain < count )
     {
         if(readaddress < wirteaddress)
         {
@@ -364,7 +363,7 @@ bool FLASH_read(SPI_Handle handle, char *Array)
             Display_printf(displayOut, 0, 0, "%s", readbuff+1031);
 */
 
-            cnt = DATA_LEN  - read_remain;
+            cnt = count  - read_remain;
             memcpy(Array+read_remain, readbuff+4, cnt);
             read_index = 4 + cnt;
             read_remain = PAGE_DATA_SIZE - cnt;;
@@ -379,9 +378,9 @@ bool FLASH_read(SPI_Handle handle, char *Array)
     }
     else
     {
-        memcpy(Array, readbuff+read_index, DATA_LEN );
-        read_index += DATA_LEN ;
-        read_remain -= DATA_LEN ;
+        memcpy(Array, readbuff+read_index, count );
+        read_index += count ;
+        read_remain -= count ;
         empty = false;
     }
 

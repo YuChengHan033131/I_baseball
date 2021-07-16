@@ -171,7 +171,7 @@ static void *flashTaskFxn(void *arg0)
                 {
             while(!empty)
                 {
-                    empty = FLASH_read(spihandle, sendData);
+                    empty = FLASH_read(spihandle, sendData,DATA_LEN);
                   //  Display_printf(displayOut, 0, 0, "char = %s", array);
                     enqueue(sendData);
                     usleep(10000);
@@ -503,11 +503,11 @@ void outputflashdata(void)
     uint8_t sendData[DATA_LEN];
     while(!empty)
     {
-        /*empty = FLASH_read(spihandle, array);
+        /*empty = FLASH_read(spihandle, array,DATA_LEN);
         enqueue(sendData);
         usleep(10000);*/
         //test
-        empty = FLASH_read(spihandle, sendData);
+        empty = FLASH_read(spihandle, sendData,DATA_LEN);
         if(!empty){
             Display_printf(displayOut,0,0,"out:%d",sendData[0]*256+sendData[1]);
         }
