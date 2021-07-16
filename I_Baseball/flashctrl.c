@@ -137,16 +137,12 @@ static void *flashTaskFxn(void *arg0)
 {
     /* Variables to keep track of the file copy progress */
     //unsigned int   bytesWritten = 0;
-    char    array[DATA_LEN*2+1];
     uint8_t sendData[DATA_LEN];
     uint64_t  cnt = 0;
-    char    arrayf[DATA_LEN*2+1];
-    uint8_t sendfData[DATA_LEN];
 
     bool empty = false;
 
     flashTaskInit();
-    //Sampledata=true;//bypass BLE, original will be call in AP task
     while (1) {
         pthread_mutex_lock(&lockflash);
         while(!Sampledata)
@@ -167,8 +163,7 @@ static void *flashTaskFxn(void *arg0)
                        sendData[10],sendData[11],sendData[12],sendData[13],sendData[14],sendData[15],sendData[16],sendData[17],sendData[18],sendData[19]);
 #endif
 */
-        //hextostr(sendData, array);//Âà¦r¦ê//data[20]->array[41] turn 1 bytes into 2 char ex:0x1a-> '1' 'a', last char =\n
-        FLASH_write(spihandle, &sendData, DATA_LEN);//write
+        FLASH_write(spihandle, &sendData, DATA_LEN);
         udAddr += DATA_LEN ;//address counter
         cnt = cnt + 1;
 
@@ -178,12 +173,8 @@ static void *flashTaskFxn(void *arg0)
                 {
                     empty = FLASH_read(spihandle, sendData);
                   //  Display_printf(displayOut, 0, 0, "char = %s", array);
-                    //strtohex(arrayf, sendfData);
-
                     enqueue(sendData);
                     usleep(10000);
-                  //  printf("%x",sendData[0]);
-                   // printf("%x\n",sendData[1]);
                 }
                }
       //  cnt = 0;
@@ -509,18 +500,15 @@ void outputflashdata(void)
 
     bool empty = false;
 
-    char    array[DATA_LEN*2+1];
     uint8_t sendData[DATA_LEN];
     while(!empty)
     {
         /*empty = FLASH_read(spihandle, array);
-        strtohex(array, sendData);
         enqueue(sendData);
         usleep(10000);*/
         //test
         empty = FLASH_read(spihandle, sendData);
         if(!empty){
-            //strtohex(array, sendData);
             Display_printf(displayOut,0,0,"out:%d",sendData[0]*256+sendData[1]);
         }
     }
