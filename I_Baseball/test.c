@@ -6,10 +6,14 @@
 #include "sensor_boosterpack_icm20649.h"
 #include <ti/display/Display.h>// for display_print through serial port
 #include <semaphore.h>
+#include "flashctrl.h"
 
 
 
 static pthread_t sensorTask;
+extern Display_Handle displayOut;
+extern sem_t BLEconnected;
+extern sem_t BLEinitDone;
 
 
 void test_createTask(void)
@@ -49,19 +53,25 @@ void test_createTask(void)
     }
 
 }
- extern Display_Handle displayOut;
 static void* testFxn(void *arg0){
-    //wait until icm20649 wakeup from sleep
     //sem_wait(&BLEinitDone);
    //wait until BLE connected
     //sem_wait(&BLEconnected);
+    Display_printf(displayOut, 0, 0, "test_task");
+    sleep(5);
+    openflash();
     Display_clear(displayOut);
-    uint8_t i;
-    for(i=0;i<255;i=i+1){
-        Display_printf(displayOut,0,0,"count: %d",i);
-        usleep(500);
-
+    uint16_t i;
+    Display_printf(displayOut, 0, 0, "start");
+    uint8_t data[20] = {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
+    for(i=0;i<10000;i=i+1){
+        data[0]=(uint8_t)(i>>8);
+        data[1]=(uint8_t)i;
+        Display_printf(displayOut,0,0,"in:%d",data[0]*256+data[1]);
+        sendtoStore(data);
     }
+    Display_printf(displayOut, 0, 0, "end");
+    outputflashdata();
     Display_close(displayOut);
     return ;
 }

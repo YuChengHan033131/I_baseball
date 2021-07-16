@@ -343,7 +343,6 @@ static void *AP_taskFxn(void *arg0)
 #ifndef DISPLAY_DISABLE
     Display_print0(displayOut,0,0,"Done!");
 #endif
-    sleep(1);//test
     while(1)
     {
         switch (state)

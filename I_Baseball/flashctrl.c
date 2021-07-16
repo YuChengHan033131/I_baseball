@@ -146,6 +146,7 @@ static void *flashTaskFxn(void *arg0)
     bool empty = false;
 
     flashTaskInit();
+    //Sampledata=true;//bypass BLE, original will be call in AP task
     while (1) {
         pthread_mutex_lock(&lockflash);
         while(!Sampledata)
@@ -158,6 +159,7 @@ static void *flashTaskFxn(void *arg0)
         getTime();
 #endif*/
         getdata(sendData);
+        Display_printf(displayOut,0,0,"flash:%d",sendData[0]*256+sendData[1]);
 /*
 #ifdef debug
         Display_printf(displayOut, 0, 0, "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
@@ -165,20 +167,20 @@ static void *flashTaskFxn(void *arg0)
                        sendData[10],sendData[11],sendData[12],sendData[13],sendData[14],sendData[15],sendData[16],sendData[17],sendData[18],sendData[19]);
 #endif
 */
-        hextostr(sendData, array);//Âà¦r¦ê//data[20]->array[41] turn 1 bytes into 2 char ex:0x1a-> '1' 'a', last char =\n
-        FLASH_write(spihandle, &array, DATA_LEN*2+1);//write
-        udAddr += DATA_LEN*2+1;//address counter
+        //hextostr(sendData, array);//Âà¦r¦ê//data[20]->array[41] turn 1 bytes into 2 char ex:0x1a-> '1' 'a', last char =\n
+        FLASH_write(spihandle, &sendData, DATA_LEN);//write
+        udAddr += DATA_LEN ;//address counter
         cnt = cnt + 1;
 
         if(cnt == 11250)
                 {
             while(!empty)
                 {
-                    empty = FLASH_read(spihandle, arrayf);
+                    empty = FLASH_read(spihandle, sendData);
                   //  Display_printf(displayOut, 0, 0, "char = %s", array);
-                    strtohex(arrayf, sendfData);
+                    //strtohex(arrayf, sendfData);
 
-                    enqueue(sendfData);
+                    enqueue(sendData);
                     usleep(10000);
                   //  printf("%x",sendData[0]);
                    // printf("%x\n",sendData[1]);
@@ -305,8 +307,9 @@ void sendtoStore(uint8_t *value)
 {
     // wait if there is no space left:
     sem_wait(&spaceFlashsem);
-
+    //Display_printf(displayOut, 0, 0,"sem_wait done");
     pthread_mutex_lock(&lockbuffer);
+    //Display_printf(displayOut, 0, 0,"mutex_lock");
     memcpy(ringbuffer + ((in++) & (NUMFLASH-1)), value, 20);
     pthread_mutex_unlock(&lockbuffer);
 
@@ -510,15 +513,19 @@ void outputflashdata(void)
     uint8_t sendData[DATA_LEN];
     while(!empty)
     {
-        empty = FLASH_read(spihandle, array);
-      //  Display_printf(displayOut, 0, 0, "char = %s", array);
+        /*empty = FLASH_read(spihandle, array);
         strtohex(array, sendData);
-
         enqueue(sendData);
-        usleep(10000);
-      //  printf("%x",sendData[0]);
-       // printf("%x\n",sendData[1]);
+        usleep(10000);*/
+        //test
+        empty = FLASH_read(spihandle, sendData);
+        if(!empty){
+            //strtohex(array, sendData);
+            Display_printf(displayOut,0,0,"out:%d",sendData[0]*256+sendData[1]);
+        }
     }
+    //send remain data in flashbuff & readbuff
+
 
 }
 void flasheraseall(void)

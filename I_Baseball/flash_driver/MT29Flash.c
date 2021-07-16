@@ -17,6 +17,7 @@
 #define ADDRESS_2_BLOCK(Address)    ((uint16_t) (Address >> 18))
 #define ADDRESS_2_PAGE(Address)     ((uint8_t)  ((Address >> 12) & 0x3F))
 #define ADDRESS_2_COL(Address)      ((uint16_t) (Address & 0x0FFF))
+#define DATA_LEN    20
 
 extern Display_Handle displayOut;
 SemaphoreP_Handle lockSem;
@@ -346,10 +347,11 @@ bool FLASH_read(SPI_Handle handle, char *Array)
 
     //Display_printf(displayOut, 0, 0, "bf read_remain = %d, bf read_index = %d", read_remain, read_index);
 
-    if(read_remain < 41)
+    if(read_remain < DATA_LEN )
     {
         if(readaddress < wirteaddress)
         {
+            memcpy(Array,readbuff+read_index,read_remain);
             status = FlashPageRead(handle, readaddress, &readbuff);
             readaddress += PAGE_DATA_SIZE;
 /*
@@ -362,11 +364,11 @@ bool FLASH_read(SPI_Handle handle, char *Array)
             Display_printf(displayOut, 0, 0, "%s", readbuff+1031);
 */
 
-            cnt = 41 - read_remain;
+            cnt = DATA_LEN  - read_remain;
             memcpy(Array+read_remain, readbuff+4, cnt);
             read_index = 4 + cnt;
             read_remain = PAGE_DATA_SIZE - cnt;;
-
+            //Display_printf(displayOut, 0, 0, "out:refill");
             empty = false;
         }
         else
@@ -377,9 +379,9 @@ bool FLASH_read(SPI_Handle handle, char *Array)
     }
     else
     {
-        memcpy(Array, readbuff+read_index, 41);
-        read_index += 41;
-        read_remain -= 41;
+        memcpy(Array, readbuff+read_index, DATA_LEN );
+        read_index += DATA_LEN ;
+        read_remain -= DATA_LEN ;
         empty = false;
     }
 
@@ -433,7 +435,7 @@ int_fast16_t FlashPageProgram(SPI_Handle handle, uint_fast32_t udAddr,const void
     status = spiTransfer(handle, NULL, &chars, 4);
     deassertCS();
 
-    usleep(10000);
+    usleep(600);
     // Step 9: Wait until the operation completes or a timeout occurs.
     if (!waitUntilReady(handle))
         status = Flash_OperationTimeOut;
@@ -483,9 +485,10 @@ int_fast16_t FLASH_write(SPI_Handle handle, const void *buf, uint16_t count)
         if(!(wirteaddress & 0x1FFFF))
             FlashBlockErase(handle,wirteaddress);
 
-        //Display_printf(displayOut, 0, 0, "address = %d", wirteaddress);
+        //Display_printf(displayOut, 0, 0, "page = %d", wirteaddress/2048);
+        //Display_printf(displayOut, 0, 0, " current data:%s", buf);
         status = FlashPageProgram(handle, wirteaddress, flashbuff, PAGE_DATA_SIZE);
-        //Display_printf(displayOut, 0, 0, "%s", flashbuff);
+
         //Display_printf(displayOut, 0, 0, "STATUS = %d", status);
         wirteaddress += PAGE_DATA_SIZE;
 
