@@ -335,23 +335,37 @@ int_fast16_t FlashPageRead(SPI_Handle handle, uint_fast32_t udAddr, void *pArray
     return status;
 
 }
-
-bool FLASH_read(SPI_Handle handle, void *Array, uint16_t count)
+/****************************************************************
+ * @fn:¡@FLASH_read
+ *
+ * @param:  SPI_Handle handle
+ *
+ * @param:  void *Array = input data pointer to store read data
+ *
+ * @param:  uint16_t len = length of read data in bytes
+ *
+ * @return: empty = if true, there are no data copy to void* data, otherwise false
+ *
+ * @description: read data from in order of readbuff, flash, flashbuff.
+ * only when previous order are empty, then can read data from next order.
+ * note: 1. readbuff and flashbuff stored in msp432
+ *       2. when readbuff empty will refill from flash
+ *       3. when flash empty will direct read from flashbuff
+ */
+bool FLASH_read(SPI_Handle handle, void *data, uint16_t len)
 {
     bool empty = false;
-    int_fast16_t status = Flash_Error;
-    uint8_t      i,cnt;
-
+    uint16_t cnt;
+    //cast all kind of data pointer to smallest length pointer uint8_t
+    data = (uint8_t*)data;
     SemaphoreP_pend(lockSem, SemaphoreP_WAIT_FOREVER);
 
-    //Display_printf(displayOut, 0, 0, "bf read_remain = %d, bf read_index = %d", read_remain, read_index);
-
-    if(read_remain < count )
+    if(read_remain < len )//don't have enough data to read in readbuff
     {
-        if(readaddress < wirteaddress)
+        if(readaddress < wirteaddress)//have at least one page in flash
         {
-            memcpy(Array,readbuff+read_index,read_remain);
-            status = FlashPageRead(handle, readaddress, &readbuff);
+            memcpy(data,readbuff+read_index,read_remain);
+            FlashPageRead(handle, readaddress, &readbuff);
             readaddress += PAGE_DATA_SIZE;
 /*
             for(i = 0; i<6; i++)
@@ -363,25 +377,37 @@ bool FLASH_read(SPI_Handle handle, void *Array, uint16_t count)
             Display_printf(displayOut, 0, 0, "%s", readbuff+1031);
 */
 
-            cnt = count  - read_remain;
-            memcpy(Array+read_remain, readbuff+4, cnt);
+            cnt = len  - read_remain;
+            memcpy(data+read_remain, readbuff+4, cnt);
             read_index = 4 + cnt;
             read_remain = PAGE_DATA_SIZE - cnt;;
             //Display_printf(displayOut, 0, 0, "out:refill");
-            empty = false;
         }
-        else
+        else//readbuff don't have enough data(read_remain < len) and flash empty
         {
+            //read remain data in readbuff, read_remain=0 is fine
+            memcpy(data,readbuff+read_index,read_remain);
+            if((len-read_remain)<=write_buff_index){//flashbuff has enough data to read
+                memcpy(data+read_remain,flashbuff,len-read_remain);
+
+                //shifting in readbuff to remove data been read
+                uint8_t shifted[write_buff_index-(len-read_remain)];
+                memcpy(shifted,flashbuff+(len-read_remain),write_buff_index-(len-read_remain));
+                memcpy(flashbuff,shifted,write_buff_index-(len-read_remain));
+                write_buff_index-=(len-read_remain);
+            }else{//flashbuff don't have enough data to read
+                empty = true;
+            }
+            read_index += read_remain;
             read_remain = 0;
-            empty = true;
+
         }
     }
-    else
+    else//read from readbuff
     {
-        memcpy(Array, readbuff+read_index, count );
-        read_index += count ;
-        read_remain -= count ;
-        empty = false;
+        memcpy(data, readbuff+read_index, len );
+        read_index += len ;
+        read_remain -= len ;
     }
 
     //Display_printf(displayOut, 0, 0, "af read_remain = %d, af read_index = %d", read_remain, read_index);

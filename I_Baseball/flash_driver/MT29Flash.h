@@ -53,7 +53,7 @@ int_fast16_t  FlashBlockErase(SPI_Handle handle, uint_fast32_t udBlockAddr);
 
 int_fast16_t FlashPageRead(SPI_Handle handle, uint_fast32_t udAddr, void *pArray);
 int_fast16_t FlashPageProgram(SPI_Handle handle, uint_fast32_t udAddr,const void *pArray, uint_fast32_t udNrOfElementsInArray);
-bool FLASH_read(SPI_Handle handle,void *Array, uint16_t count);
+bool FLASH_read(SPI_Handle handle, void *data, uint16_t len);
 int_fast16_t FLASH_write(SPI_Handle handle, const void *buf, uint16_t count);
 
 int_fast16_t FlashWriteEnable(SPI_Handle handle);
