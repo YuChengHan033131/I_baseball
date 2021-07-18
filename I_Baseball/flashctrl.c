@@ -160,7 +160,6 @@ static void *flashTaskFxn(void *arg0)
         getTime();
 #endif*/
         getdata(sendData);
-        Display_printf(displayOut,0,0,"flash:%d",sendData[0]*256+sendData[1]);
 /*
 #ifdef debug
         Display_printf(displayOut, 0, 0, "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
@@ -508,13 +507,10 @@ void outputflashdata(void)
     uint8_t sendData[DATA_LEN];
     while(!empty)
     {
-        /*empty = FLASH_read(spihandle, array,DATA_LEN);
-        enqueue(sendData);
-        usleep(10000);*/
-        //test
         empty = FLASH_read(spihandle, sendData,DATA_LEN);
         if(!empty){
-            Display_printf(displayOut,0,0,"out:%d",sendData[0]*256+sendData[1]);
+            enqueue(sendData);
+            usleep(10000);
         }
     }
     //send remain data in flashbuff & readbuff

@@ -54,24 +54,21 @@ void test_createTask(void)
 
 }
 static void* testFxn(void *arg0){
-    //sem_wait(&BLEinitDone);
-   //wait until BLE connected
-    //sem_wait(&BLEconnected);
-    Display_printf(displayOut, 0, 0, "test_Task");
-    Display_printf(displayOut, 0, 0, "start");
-    sleep(5);
+
+    sem_wait(&BLEinitDone);
+    sem_wait(&BLEconnected);
     openflash();
     Display_clear(displayOut);
     uint16_t i;
     uint8_t data[20] = {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
+    data[0]=0x26;
+    data[1]=0xa3;
     for(i=0;i<10000;i=i+1){
-        data[0]=(uint8_t)(i>>8);
-        data[1]=(uint8_t)i;
-        Display_printf(displayOut,0,0,"in:%d",data[0]*256+data[1]);
+        data[2]=(uint8_t)(i>>8);
+        data[3]=(uint8_t)i;
         sendtoStore(data);
     }
     outputflashdata();
-    Display_printf(displayOut, 0, 0, "end");
     Display_close(displayOut);
     return ;
 }
