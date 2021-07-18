@@ -57,6 +57,7 @@ static void* testFxn(void *arg0){
     //sem_wait(&BLEinitDone);
    //wait until BLE connected
     //sem_wait(&BLEconnected);
+    Display_printf(displayOut, 0, 0, "test_Task");
     Display_printf(displayOut, 0, 0, "start");
     sleep(5);
     openflash();

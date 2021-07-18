@@ -128,13 +128,16 @@ static void flashTaskInit(void)
     */
 
     udAddr = 0;
-    pthread_mutex_init(&lockbuffer, NULL);
-    pthread_mutex_init(&lockflash, NULL);
-    pthread_cond_init(&condflash, NULL);
+
 }
 
 static void *flashTaskFxn(void *arg0)
 {
+    pthread_mutex_init(&lockbuffer, NULL);
+    pthread_mutex_init(&lockflash, NULL);
+    pthread_cond_init(&condflash, NULL);
+    pthread_mutex_lock(&lockflash);
+
     /* Variables to keep track of the file copy progress */
     //unsigned int   bytesWritten = 0;
     uint8_t sendData[DATA_LEN];
@@ -143,6 +146,8 @@ static void *flashTaskFxn(void *arg0)
     bool empty = false;
 
     flashTaskInit();
+    pthread_cond_wait(&condflash, &lockflash);
+    pthread_mutex_unlock(&lockflash);
     while (1) {
         pthread_mutex_lock(&lockflash);
         while(!Sampledata)
