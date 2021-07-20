@@ -460,7 +460,7 @@ int_fast16_t FlashPageProgram(SPI_Handle handle, uint_fast32_t udAddr,const void
     status = spiTransfer(handle, NULL, &chars, 4);
     deassertCS();
 
-    usleep(600);
+    //usleep(600);
     // Step 9: Wait until the operation completes or a timeout occurs.
     if (!waitUntilReady(handle))
         status = Flash_OperationTimeOut;
