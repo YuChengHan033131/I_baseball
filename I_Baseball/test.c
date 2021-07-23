@@ -55,8 +55,9 @@ void test_createTask(void)
 }
 static void* testFxn(void *arg0){
 
-    sem_wait(&BLEinitDone);
-    sem_wait(&BLEconnected);
+    //sem_wait(&BLEinitDone);
+    //sem_wait(&BLEconnected);
+    Display_printf(displayOut,0,0,"start");
     openflash();
     Display_clear(displayOut);
     uint16_t i;
@@ -69,6 +70,7 @@ static void* testFxn(void *arg0){
         sendtoStore(data);
     }
     outputflashdata();
+    Display_printf(displayOut,0,0,"end");
     Display_close(displayOut);
     return ;
 }

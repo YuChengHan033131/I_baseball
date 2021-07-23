@@ -409,7 +409,6 @@ static void icm20649Callback(uint_least8_t index)
 
      /* Initialize the task */
      movementTaskInit(); //include initialize icm20649 register
-     return;
      sem_wait(&BLEinitDone);
      sem_wait(&BLEconnected);
      //caution! register setting must be done after BLE init & connected in case of error happen

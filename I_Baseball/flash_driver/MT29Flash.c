@@ -38,6 +38,7 @@ static void Build_Column_Stream(uint_fast32_t Addr, uint8_t cCMD, uint8_t *chars
 static void Build_Row_Stream(uint_fast32_t Addr, uint8_t cCMD, uint8_t *chars);
 
 bool waitUntilReady(SPI_Handle handle);
+bool FlashECC(SPI_Handle handle,bool value);
 bool FlashReadStatusRegister(SPI_Handle handle, uint8_t *rxBuf);
 bool IsFlashBusy(SPI_Handle handle);
 extern volatile bool flash_change_flag;  //orignal haven't
@@ -292,6 +293,7 @@ void FLASH_initialize(SPI_Handle handle)
 
     assertCS();
     FlashUnlockAll(handle);
+    //FlashECC(handle,true);
     deassertCS();
     usleep(250);
     SemaphoreP_post(lockSem);
@@ -574,4 +576,35 @@ bool waitUntilReady(SPI_Handle handle)
     }
 
     return true;
+}
+/*******************************************
+ * @fn: FlashECC(SPI_Handle handle, bool true)
+ *
+ * @description:enable or disable ECC,
+ * each flash page will leave 64 bytes for error detection and correction
+ *
+ * */
+
+bool FlashECC(SPI_Handle handle, bool value){
+    uint8_t  chars[4];
+    uint8_t  data;
+    bool status;
+    assertCS();
+    chars[0]= (uint8_t) MT29F_GetFeature;
+    chars[1]= OTP_REG_ADDR ;
+    chars[2]= 0x00;
+    status = spiTransfer(handle, data, &chars, 2);//true if success
+
+    chars[0]= (uint8_t) MT29F_SetFeature;
+    chars[1]= OTP_REG_ADDR ;
+    if(value){
+        //ECC enable
+        chars[2]= data | 0x10;
+    }else{
+        //ECC disable
+        chars[2]= data & 0xEF;
+    }
+    status = status & spiTransfer(handle, NULL, &chars, 3);//true if success
+    deassertCS();
+    return status;
 }
