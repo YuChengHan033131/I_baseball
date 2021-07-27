@@ -118,6 +118,7 @@ static void flashTaskInit(void)
   //  usleep(250);//a minimum of 250us must elapse before issuing a RESET (FFh) command
     usleep(250);
     FLASH_initialize(spihandle);
+    flasheraseall();
 
     /*
     while(udAddr < NUM_BLOCKS * NUM_PAGE_BLOCK * PAGE_DATA_SIZE)

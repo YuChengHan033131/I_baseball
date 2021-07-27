@@ -225,11 +225,11 @@ static void Build_Row_Stream(uint_fast32_t Addr, uint8_t cCMD, uint8_t *chars)
     chars[3] = (uint8_t) (udAddr>>12);
     */
 
-    uint_fast32_t udAddr = Addr & 0xFFFFF800;
+    uint_fast32_t udAddr = Addr/PAGE_DATA_SIZE;
     chars[0] = (uint8_t) cCMD;
-    chars[1] = (uint8_t) (udAddr>>27);
-    chars[2] = (uint8_t) (udAddr>>19);
-    chars[3] = (uint8_t) (udAddr>>11);//page
+    chars[1] = (uint8_t) (udAddr>>16);
+    chars[2] = (uint8_t) (udAddr>>8);
+    chars[3] = (uint8_t) (udAddr);//page
 
 }
 
@@ -293,7 +293,7 @@ void FLASH_initialize(SPI_Handle handle)
 
     assertCS();
     FlashUnlockAll(handle);
-    //FlashECC(handle,true);
+    FlashECC(handle,false);
     deassertCS();
     usleep(250);
     SemaphoreP_post(lockSem);
