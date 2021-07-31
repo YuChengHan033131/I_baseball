@@ -405,15 +405,13 @@ static void icm20649Callback(uint_least8_t index)
  * function use in test_SensorICM20649_createTask(void)
  */
  void* test_icm2049_TaskFxn(void *arg0){
+     Display_printf(displayOut,0,0,"icm taskFxn start");
 
      /* Initialize the task */
      movementTaskInit(); //include initialize icm20649 register
-     //sem_wait(&BLEinitDone);
-     //sem_wait(&BLEconnected);
-     //caution! register setting must be done after BLE init & connected in case of error happen
-     //because setting may failed while sensor in sleep mode
-     //wake up from sleep mode
-
+     //SensorICM20649_Deactivate();
+     //want to add wake-on motion in between
+     //SensorICM20649_Activate();
 
      uint8_t sampleRateDivider=0;
      /* Set the sample rate divider of the accelerometer */
@@ -437,17 +435,6 @@ static void icm20649Callback(uint_least8_t index)
 
      static uint8_t sensordata[20] = {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
      uint16_t i, j, seqNum=0;
-
-     for(i=0;i<3;i=i+1){
-          sleep(1);
-          sensordata[0]=3-i;
-          enqueue(sensordata);
-     }
-     //flag
-     sensordata[0]=0x26;
-     sensordata[1]=0xa2;
-
-
 
      /*reset FIFO*/
      writeReg(REG_BANK_SEL, BANK_0);
@@ -491,6 +478,7 @@ static void icm20649Callback(uint_least8_t index)
      }
      //send all of the flash data through BLE
      outputflashdata();
+     Display_printf(displayOut,0,0,"end");
 
 
  }

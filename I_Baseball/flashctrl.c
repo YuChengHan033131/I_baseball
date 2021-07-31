@@ -511,7 +511,7 @@ void outputflashdata(void)
         empty = FLASH_read(spihandle, sendData,DATA_LEN);
         if(!empty){
             //enqueue(sendData);
-            Display_printf(displayOut,0,0,"out:%d",sendData[2]*256+sendData[3]);
+            Display_printf(displayOut,0,0,"out:%d",sendData[14]*256+sendData[15]);
             //usleep(10000);
         }
     }
