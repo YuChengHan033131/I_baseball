@@ -939,13 +939,11 @@ static void Baseball6xs_processCharChangeEvt(uint8_t paramID)
                     Timer_stop(timer0);
                     HwiP_disableInterrupt(40);
                     MAP_ADC14_disableConversion();
-                    SensorICM20649_Activate(false);
                     sem_post(&BLEconnected);
                 }
                 else if(Baseball6xsConfig != 0x12 && newValue == 0x12)
                 {
                     openflash();
-                    SensorICM20649_Deactivate();
                     Timer_start(timer0);
                     HwiP_enableInterrupt(40);
                     MAP_ADC14_enableConversion();
@@ -1090,7 +1088,6 @@ static void ALL_Sensor_Disable(void)
     //SensorBMP280_Deactivate();
     //SensorBMA253_Deactivate();
     //SensorBHI160_Deactivate();
-    SensorICM20649_Deactivate();
     SensorA301_Deactivate();
     Timer_stop(timer0);
     HwiP_disableInterrupt(40);
