@@ -66,7 +66,7 @@ void SensorICM20649_createTask(void);
  * Task Event Processor for characteristic changes
  */
 extern void SensorICM20649_Deactivate(void);
-extern void SensorICM20649_Activate(bool div);
+extern void SensorICM20649_Activate(void);
 //extern void SensorICM20649_processCharChangeEvt(uint8_t paramID);
 
 

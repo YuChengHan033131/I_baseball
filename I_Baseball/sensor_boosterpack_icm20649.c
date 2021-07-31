@@ -175,14 +175,13 @@ void SensorICM20649_Deactivate(void)
     pthread_mutex_unlock(&lock);
 }
 
-void SensorICM20649_Activate(bool div)
+void SensorICM20649_Activate(void)
 {
     /* Activate task */
 
    // printf("Active\n");
     pthread_mutex_lock(&lock);
     sampleData = true;
-    div_en = div;
     /* Enable the ICM20649 sensor */
     sensorICM20649_enable(0);
     pthread_cond_signal(&cond);
