@@ -224,12 +224,11 @@ static void Build_Row_Stream(uint_fast32_t Addr, uint8_t cCMD, uint8_t *chars)
     chars[2] = (uint8_t) (udAddr>>20);
     chars[3] = (uint8_t) (udAddr>>12);
     */
-
-    uint_fast32_t udAddr = Addr/PAGE_DATA_SIZE;
+;
     chars[0] = (uint8_t) cCMD;
-    chars[1] = (uint8_t) (udAddr>>16);
-    chars[2] = (uint8_t) (udAddr>>8);
-    chars[3] = (uint8_t) (udAddr);//page
+    chars[1] = (uint8_t) (Addr>>16);
+    chars[2] = (uint8_t) (Addr>>8);
+    chars[3] = (uint8_t) (Addr);//page
 
 }
 
@@ -368,7 +367,7 @@ bool FLASH_read(SPI_Handle handle, void *data, uint16_t len)
         {
             memcpy(data,readbuff+read_index,read_remain);
             FlashPageRead(handle, readaddress, &readbuff);
-            readaddress += PAGE_DATA_SIZE;
+            readaddress += 1;
 /*
             for(i = 0; i<6; i++)
             {
@@ -412,21 +411,6 @@ bool FLASH_read(SPI_Handle handle, void *data, uint16_t len)
         read_remain -= len ;
     }
 
-    //Display_printf(displayOut, 0, 0, "af read_remain = %d, af read_index = %d", read_remain, read_index);
-/*
-    while(readaddress < wirteaddress)
-    {
-        status = FlashPageRead(handle, readaddress, &readbuff);
-        readaddress += PAGE_DATA_SIZE;
-
-        for(i = 0; i<6; i++){
-            readtemp[i] = readbuff[i+1025];
-        }
-        Display_printf(displayOut, 0, 0, "%s", readbuff+4);
-        Display_printf(displayOut, 0, 0, "%s", readtemp);
-        Display_printf(displayOut, 0, 0, "%s", readbuff+1031);
-    }
-*/
     SemaphoreP_post(lockSem);
 
     return (empty);
@@ -488,7 +472,7 @@ int_fast16_t FLASH_write(SPI_Handle handle, const void *buf, uint16_t count)
 
     if(count > PAGE_DATA_SIZE)
         return Flash_AddressInvalid;
-    if(wirteaddress > NUM_BLOCKS*NUM_PAGE_BLOCK*(PAGE_DATA_SIZE-1))
+    if(wirteaddress > NUM_BLOCKS*NUM_PAGE_BLOCK)
         return Flash_AddressInvalid;
 
     SemaphoreP_pend(lockSem, SemaphoreP_WAIT_FOREVER);
@@ -509,15 +493,14 @@ int_fast16_t FLASH_write(SPI_Handle handle, const void *buf, uint16_t count)
 
         memcpy(flashbuff+write_buff_index, buf, sizeof(uint8_t)*writebytes);
 
-        if(!(wirteaddress & 0x1FFFF))
-            FlashBlockErase(handle,wirteaddress);
+        /*can be replace by erase all
+         * if(!(wirteaddress & 0x1FFFF))
+            FlashBlockErase(handle,wirteaddress);*/
 
-        //Display_printf(displayOut, 0, 0, "page = %d", wirteaddress/2048);
-        //Display_printf(displayOut, 0, 0, " current data:%s", buf);
         status = FlashPageProgram(handle, wirteaddress, flashbuff, PAGE_DATA_SIZE);
 
         //Display_printf(displayOut, 0, 0, "STATUS = %d", status);
-        wirteaddress += PAGE_DATA_SIZE;
+        wirteaddress += 1;
 
         if(remainbytes > 0)
         {
