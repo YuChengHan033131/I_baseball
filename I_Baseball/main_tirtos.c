@@ -90,7 +90,7 @@ void main()
     //SensorICM20649_createTask();
     test_SensorICM20649_createTask();
 
-    test_createTask();
+    //test_createTask();
 
     AP_createTask();
     //SensorICM20649_Deactivate();//stop the sensor by sampleData = false,hte sensor will stop in a while loop

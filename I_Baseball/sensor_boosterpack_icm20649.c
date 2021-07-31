@@ -409,10 +409,11 @@ static void icm20649Callback(uint_least8_t index)
 
      /* Initialize the task */
      movementTaskInit(); //include initialize icm20649 register
-     sem_wait(&BLEinitDone);
-     sem_wait(&BLEconnected);
+     //sem_wait(&BLEinitDone);
+     //sem_wait(&BLEconnected);
      //caution! register setting must be done after BLE init & connected in case of error happen
      //because setting may failed while sensor in sleep mode
+     //wake up from sleep mode
 
 
      uint8_t sampleRateDivider=0;
@@ -470,10 +471,12 @@ static void icm20649Callback(uint_least8_t index)
          // writeReg(FIFO_EN_2, 0x00);
 
 
-         for(j=0;j<2052;j=j+12){
-             //read data number in FIFO
+         for(j=0;j<2052;j=j+12){//2052=6 axis sensor*2 bytes*171 times of sample = at least amount of data in FIFO
+             /*useless
+              * read data number in FIFO
             writeReg(REG_BANK_SEL, BANK_0);
-            readReg(FIFO_COUNT_H, &sensordata[16], 2);
+            readReg(FIFO_COUNT_H, &sensordata[16], 2);*/
+
             writeReg(REG_BANK_SEL, BANK_0);
             readReg(FIFO_R_W, &sensordata[ 2], 12);
             //order: acc x_H//acc x_L//acc y_H//acc y_L//acc z_H//acc z_L///gyr x_H//gyr x_L//gyr y_H;//gyr y_L//gyr z_H//gyr z_L
