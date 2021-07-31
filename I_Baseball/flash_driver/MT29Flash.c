@@ -47,7 +47,7 @@ bool test_change = false;  //orignal haven't
 //int_fast16_t FlashWriteEnable(SPI_Handle handle);
 //int_fast16_t FlashWriteDisable(SPI_Handle handle);
 
-static uint8_t          flashbuff[PAGE_SIZE];
+static uint8_t          flashbuff[PAGE_DATA_SIZE];
 static uint8_t          readbuff[PAGE_DATA_SIZE+4];
 static uint8_t          readtemp[6];  //orignal haven't
 static uint16_t         read_remain = 0;

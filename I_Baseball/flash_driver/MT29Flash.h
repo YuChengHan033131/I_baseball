@@ -34,9 +34,7 @@ extern "C" {
 #define STATUS_REG_ADDR         0xC0
 
 #define FLASH_WIDTH             8               /* Flash data width */
-#define PAGE_SIZE               2176            /* Page size in bytes */
-#define PAGE_DATA_SIZE          2112            /* Page data size in bytes *, can set to 2176 if ECC disable/
-#define PAGE_SPARE_SIZE         64              /* Page spare size in bytes*/
+#define PAGE_DATA_SIZE          2112            /* Page data size in bytes , can set to 2176 if ECC disable*/
 #define NUM_BLOCKS              2048            /* Number of blocks*/
 #define NUM_PAGE_BLOCK          64              /* Number of pages for block*/
 //#define NUM_PLANES              1               /* Number of planes*/
