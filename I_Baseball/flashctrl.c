@@ -532,6 +532,5 @@ void flasheraseall(void)
         //Display_printf(display, 0, 0, "after %d erase, status = %02x",udAddr, statusregister);
         udAddr += NUM_PAGE_BLOCK * PAGE_DATA_SIZE;
     }
-    Display_printf(displayOut, 0, 0, "erase finish!");
     udAddr = 0;
 }
