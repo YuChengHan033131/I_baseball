@@ -82,8 +82,8 @@ void main()
     }
 
     flash_createTask();
-    BLEsend_createTask();
-    ForceSensor_createTask();
+    //BLEsend_createTask();
+    //ForceSensor_createTask();
     //SensorBMP280_createTask();
     //SensorBHI160_createTask();
     //SensorBMA253_createTask();
@@ -92,8 +92,7 @@ void main()
 
     //test_createTask();
 
-    AP_createTask();
-    //SensorICM20649_Deactivate();//stop the sensor by sampleData = false,hte sensor will stop in a while loop
+    //AP_createTask();
 
     /* Enable interrupts and start SYS/BIOS */
     BIOS_start();
