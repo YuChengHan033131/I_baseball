@@ -413,6 +413,7 @@ static void icm20649Callback(uint_least8_t index)
      //sem_wait(&BLEconnected);
      //want to add wake-on motion in between
      SensorICM20649_Activate();
+     openflash();
 
      uint8_t sampleRateDivider=0;
      /* Set the sample rate divider of the accelerometer */
@@ -439,7 +440,7 @@ static void icm20649Callback(uint_least8_t index)
 
      /*reset FIFO*/
      writeReg(REG_BANK_SEL, BANK_0);
-     writeReg(FIFO_RST, 0x0f);//not sure which value can acutally reset
+     writeReg(FIFO_RST, 0x0f);//not sure which value can actually reset
      writeReg(REG_BANK_SEL, BANK_0);
      writeReg(FIFO_RST, 0x00);
 
@@ -447,14 +448,10 @@ static void icm20649Callback(uint_least8_t index)
      writeReg(REG_BANK_SEL, BANK_0);
      writeReg(FIFO_EN_2, 0x1e);//acc & gyr
 
-     for(i=0;i<58;i=i+1){//almot 10000 times of sampeling
+     for(i=0;i<58;i=i+1){//almot 10000 times of sampling
          //enable FIFO water mark to interrupt 1
          writeReg(REG_BANK_SEL, BANK_0);
          writeReg(INT_ENABLE3, 0x01);
-         //test
-         uint8_t data;
-         readReg(PWR_MGMT_1,&data,1);
-         Display_printf(displayOut,0,0,"reg:%d",data);
 
          sem_wait(&icm20649Sem);
          //test: disable data write after reach FIFO water mark
@@ -479,7 +476,7 @@ static void icm20649Callback(uint_least8_t index)
             sensordata[15]=(uint8_t)seqNum;
             seqNum+=1;
             sendtoStore(sensordata);
-            Display_printf(displayOut,0,0,"in:%d",sensordata[14]*256+sensordata[15]);
+            //Display_printf(displayOut,0,0,"in:%d",sensordata[14]*256+sensordata[15]);//adding this will cause FIFO overflow
          }
 
      }
