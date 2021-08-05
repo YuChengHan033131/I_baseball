@@ -408,11 +408,9 @@ static void icm20649Callback(uint_least8_t index)
      Display_printf(displayOut,0,0,"icm taskFxn start");
 
      /* Initialize the task */
-     movementTaskInit(); //include initialize icm20649 register, sleep mode 20
-     //sem_wait(&BLEinitDone);
-     //sem_wait(&BLEconnected);
-     //want to add wake-on motion in between
-     SensorICM20649_Activate();
+     movementTaskInit(); //include initialize icm20649 register, sleep mode
+     SensorICM20649_Activate();//leave sleep mode & activate acc, gyro
+
      openflash();
 
      uint8_t sampleRateDivider=0;
@@ -433,22 +431,59 @@ static void icm20649Callback(uint_least8_t index)
      /*enable FIFO*/
      writeReg(REG_BANK_SEL, BANK_0);
      writeReg(USER_CTRL, 0x40);
-
-
-     static uint8_t sensordata[20] = {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
-     uint16_t i, j, seqNum=0;
-
      /*reset FIFO*/
      writeReg(REG_BANK_SEL, BANK_0);
      writeReg(FIFO_RST, 0x0f);//not sure which value can actually reset
      writeReg(REG_BANK_SEL, BANK_0);
      writeReg(FIFO_RST, 0x00);
 
+
+     static uint8_t sensordata[20] = {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
+     uint16_t i, j, seqNum=0;
+     uint8_t data;
+
+     //enable wake-on motion interrupt
+     writeReg(REG_BANK_SEL, BANK_0);
+     writeReg(INT_ENABLE, 0x08);
+     //enable wake-on motion logic & setting
+     writeReg(REG_BANK_SEL, BANK_2);
+     writeReg(ACCEL_INTEL_CTRL, 0x02);//logic on, setting compare to first value
+
+     //wake-on motion threshold
+     writeReg(REG_BANK_SEL, BANK_2);
+     writeReg(ACCEL_WOM_THR, 0xff);//LSB=4mg ,range=0~1020mg
+
+     //turn on low power mode
+     writeReg(REG_BANK_SEL, BANK_0);
+     readReg(PWR_MGMT_1,&data,1);
+     data |= 0x20;
+     writeReg(PWR_MGMT_1, data);
+
+     sem_wait(&icm20649Sem);//wait for wake-on motion interrupt
+
      /*enable acc & gyro write to FIFO*/
      writeReg(REG_BANK_SEL, BANK_0);
      writeReg(FIFO_EN_2, 0x1e);//acc & gyr
 
-     for(i=0;i<58;i=i+1){//almot 10000 times of sampling
+     //disable wake-on motion interrupt
+     writeReg(REG_BANK_SEL, BANK_0);
+     writeReg(INT_ENABLE, 0x00);
+     //disable wake-on motion logic
+     writeReg(REG_BANK_SEL, BANK_2);
+     writeReg(ACCEL_INTEL_CTRL, 0x00);
+     //turn off low power mode
+     writeReg(REG_BANK_SEL, BANK_0);
+     readReg(PWR_MGMT_1,&data,1);
+     data &= 0xDF;
+     writeReg(PWR_MGMT_1,data);
+
+     Display_printf(displayOut,0,0,"wake up");
+
+     //test: see interrupt status
+     /*writeReg(REG_BANK_SEL, BANK_0);
+     readReg(INT_STATUS, &data,1);*/
+
+     for(i=0;i<58;i=i+1){//9918 times of sampling
          //enable FIFO water mark to interrupt 1
          writeReg(REG_BANK_SEL, BANK_0);
          writeReg(INT_ENABLE3, 0x01);
@@ -480,6 +515,8 @@ static void icm20649Callback(uint_least8_t index)
          }
 
      }
+     //sem_wait(&BLEinitDone);
+     //sem_wait(&BLEconnected);
      //send all of the flash data through BLE
      outputflashdata();
      Display_printf(displayOut,0,0,"end");
