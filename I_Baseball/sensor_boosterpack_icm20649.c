@@ -169,7 +169,6 @@ void SensorICM20649_Deactivate(void)
   //  printf("icmclose\n");
     /* Deactivate task */
     pthread_mutex_lock(&lock);
-    sampleData = false;
     /* Disable the ICM20649 sensor */
     sensorICM20649_enable(0x3F);
     pthread_mutex_unlock(&lock);
@@ -181,10 +180,8 @@ void SensorICM20649_Activate(void)
 
    // printf("Active\n");
     pthread_mutex_lock(&lock);
-    sampleData = true;
     /* Enable the ICM20649 sensor */
     sensorICM20649_enable(0);
-    pthread_cond_signal(&cond);
     pthread_mutex_unlock(&lock);
 }
 
@@ -399,7 +396,10 @@ static void icm20649Callback(uint_least8_t index)
 
     /* Initializing the semaphore */
     sem_init(&icm20649Sem,0,0);
-    //sem_init(&publishDataSem,0,0);
+
+    /* Initialize mutex*/
+
+
 }
 /*************************************************************
  * function use in test_SensorICM20649_createTask(void)
@@ -428,9 +428,11 @@ static void icm20649Callback(uint_least8_t index)
      SensorICM20649_gyroSetRange(GYRO_RANGE_4000DPS);
      /* The accel sensor needs max 30ms, the gyro max 35ms to fully start */
      usleep(50000);
+
      /*enable FIFO*/
      writeReg(REG_BANK_SEL, BANK_0);
      writeReg(USER_CTRL, 0x40);
+
      /*reset FIFO*/
      writeReg(REG_BANK_SEL, BANK_0);
      writeReg(FIFO_RST, 0x0f);//not sure which value can actually reset
@@ -439,19 +441,21 @@ static void icm20649Callback(uint_least8_t index)
 
 
      static uint8_t sensordata[20] = {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
-     uint16_t i, j, seqNum=0;
+     uint16_t i, j, seqNum=0, cnt=0;
      uint8_t data;
+     bool sample = true;
+
 
      //enable wake-on motion interrupt
      writeReg(REG_BANK_SEL, BANK_0);
      writeReg(INT_ENABLE, 0x08);
      //enable wake-on motion logic & setting
      writeReg(REG_BANK_SEL, BANK_2);
-     writeReg(ACCEL_INTEL_CTRL, 0x02);//logic on, setting compare to first value
+     writeReg(ACCEL_INTEL_CTRL, 0x03);//logic on, setting compare to previous value
 
      //wake-on motion threshold
      writeReg(REG_BANK_SEL, BANK_2);
-     writeReg(ACCEL_WOM_THR, 0xff);//LSB=4mg ,range=0~1020mg
+     writeReg(ACCEL_WOM_THR, 0x04);//LSB=4mg ,range=0~1020mg
 
      //turn on low power mode
      writeReg(REG_BANK_SEL, BANK_0);
@@ -460,10 +464,11 @@ static void icm20649Callback(uint_least8_t index)
      writeReg(PWR_MGMT_1, data);
 
      sem_wait(&icm20649Sem);//wait for wake-on motion interrupt
+     Display_printf(displayOut,0,0,"wake up");
 
-     /*enable acc & gyro write to FIFO*/
-     writeReg(REG_BANK_SEL, BANK_0);
-     writeReg(FIFO_EN_2, 0x1e);//acc & gyr
+     //test: see interrupt status
+     /*writeReg(REG_BANK_SEL, BANK_0);
+     readReg(INT_STATUS, &data,1);*/
 
      //disable wake-on motion interrupt
      writeReg(REG_BANK_SEL, BANK_0);
@@ -471,19 +476,27 @@ static void icm20649Callback(uint_least8_t index)
      //disable wake-on motion logic
      writeReg(REG_BANK_SEL, BANK_2);
      writeReg(ACCEL_INTEL_CTRL, 0x00);
+
      //turn off low power mode
      writeReg(REG_BANK_SEL, BANK_0);
      readReg(PWR_MGMT_1,&data,1);
      data &= 0xDF;
      writeReg(PWR_MGMT_1,data);
 
-     Display_printf(displayOut,0,0,"wake up");
 
-     //test: see interrupt status
-     /*writeReg(REG_BANK_SEL, BANK_0);
-     readReg(INT_STATUS, &data,1);*/
+     /*reset value in semaphore*///since may have multiple WOM interrupt
+     sem_getvalue(&icm20649Sem,&data);
+     for(i=0;i<data;i++){
+         sem_wait(&icm20649Sem);
+     }
+     sem_getvalue(&icm20649Sem,&data);
 
-     for(i=0;i<58;i=i+1){//9918 times of sampling
+     /*enable acc & gyro write to FIFO*/
+     writeReg(REG_BANK_SEL, BANK_0);
+     writeReg(FIFO_EN_2, 0x1e);//acc & gyr
+
+     //while(sample){
+     for(i=0;i<58;i++){//9918 times of sampling
          //enable FIFO water mark to interrupt 1
          writeReg(REG_BANK_SEL, BANK_0);
          writeReg(INT_ENABLE3, 0x01);
@@ -502,19 +515,43 @@ static void icm20649Callback(uint_least8_t index)
             readReg(FIFO_COUNT_H, &sensordata[16], 2);*/
 
             writeReg(REG_BANK_SEL, BANK_0);
-            readReg(FIFO_R_W, &sensordata[ 2], 12);
+            readReg(FIFO_R_W, &sensordata[0], 12);
             //order: acc x_H//acc x_L//acc y_H//acc y_L//acc z_H//acc z_L///gyr x_H//gyr x_L//gyr y_H;//gyr y_L//gyr z_H//gyr z_L
             //usleep(10000);
             //enqueue(sensordata);
             //add seqNum
-            sensordata[14]=(uint8_t)(seqNum>>8);
-            sensordata[15]=(uint8_t)seqNum;
+            sensordata[12]=(uint8_t)(seqNum>>8);
+            sensordata[13]=(uint8_t)seqNum;
             seqNum+=1;
             sendtoStore(sensordata);
             //Display_printf(displayOut,0,0,"in:%d",sensordata[14]*256+sensordata[15]);//adding this will cause FIFO overflow
-         }
 
+            /*end data collection if no motion for 10 second*/
+            //compare acc_x/y/z with threshold
+            /*int16_t threshold = 500;//i.e. +-0.458g
+            bool smaller = true;
+            for(i=0;i<3;i++){
+                if(sensordata[i*2]*256+sensordata[i*2+1]>threshold+32768 || sensordata[i*2]*256+sensordata[i*2+1]<32768-threshold){
+                    //not in threshold
+                    smaller =false;
+                    break;
+                }
+            }
+            if(smaller){
+                cnt+=1;
+            }else{
+                cnt = 0;
+            }
+
+            if(cnt>1125/(1+sampleRateDivider)*10){//sample rate *10 second
+                sample = false;
+                break;
+            }*/
+         }
+         //Display_printf(displayOut,0,0,"cnt:%d",cnt);
      }
+
+     Display_printf(displayOut,0,0,"done data collection");
      //sem_wait(&BLEinitDone);
      //sem_wait(&BLEconnected);
      //send all of the flash data through BLE
