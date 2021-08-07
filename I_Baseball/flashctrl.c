@@ -513,9 +513,9 @@ void outputflashdata(void)
             //enqueue(sendData);
             //usleep(10000);
             Display_printf(displayOut,0,0,"out:%d",sendData[12]*256+sendData[13]);
-            //Display_printf(displayOut,0,0,"accx:%d",sendData[0]*256+sendData[1]);
-            //Display_printf(displayOut,0,0,"accy:%d",sendData[2]*256+sendData[3]);
-            //Display_printf(displayOut,0,0,"accz:%d",sendData[4]*256+sendData[5]);
+            Display_printf(displayOut,0,0,"accx:%d",sendData[0]*256+sendData[1]);
+            Display_printf(displayOut,0,0,"accy:%d",sendData[2]*256+sendData[3]);
+            Display_printf(displayOut,0,0,"accz:%d",sendData[4]*256+sendData[5]);
 
 
         }
@@ -530,12 +530,12 @@ void flasheraseall(void)
 {
     udAddr = 0;
     //uint8_t statusregister;
-    while(udAddr < (NUM_BLOCKS-2) * NUM_PAGE_BLOCK * PAGE_DATA_SIZE)
+    while(udAddr < (NUM_BLOCKS-2) * NUM_PAGE_BLOCK)
     {
         FlashBlockErase(spihandle, udAddr);
         //FlashReadStatusRegister(handle, &statusregister);
         //Display_printf(display, 0, 0, "after %d erase, status = %02x",udAddr, statusregister);
-        udAddr += NUM_PAGE_BLOCK * PAGE_DATA_SIZE;
+        udAddr += NUM_PAGE_BLOCK;
     }
     udAddr = 0;
 }

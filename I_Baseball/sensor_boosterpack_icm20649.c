@@ -489,7 +489,6 @@ static void icm20649Callback(uint_least8_t index)
      for(i=0;i<data;i++){
          sem_wait(&icm20649Sem);
      }
-     sem_getvalue(&icm20649Sem,&data);
 
      /*enable acc & gyro write to FIFO*/
      writeReg(REG_BANK_SEL, BANK_0);
