@@ -64,10 +64,11 @@ static void* testFxn(void *arg0){
     uint8_t data[20] = {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
     data[0]=0x26;
     data[1]=0xa3;
-    for(i=0;i<10000;i=i+1){
-        data[2]=(uint8_t)(i>>8);
-        data[3]=(uint8_t)i;
+    for(i=0;i<15000;i=i+1){
+        data[12]=(uint8_t)(i>>8);
+        data[13]=(uint8_t)i;
         sendtoStore(data);
+        Display_printf(displayOut,0,0,"in:%d",i);
     }
     outputflashdata();
     Display_printf(displayOut,0,0,"end");

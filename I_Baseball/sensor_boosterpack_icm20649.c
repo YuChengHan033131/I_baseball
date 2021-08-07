@@ -495,7 +495,7 @@ static void icm20649Callback(uint_least8_t index)
      writeReg(FIFO_EN_2, 0x1e);//acc & gyr
 
      //while(sample){
-     for(i=0;i<58;i++){//9918 times of sampling
+     for(i=0;i<70;i++){//9918 times of sampling
          //enable FIFO water mark to interrupt 1
          writeReg(REG_BANK_SEL, BANK_0);
          writeReg(INT_ENABLE3, 0x01);
