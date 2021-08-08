@@ -53,7 +53,7 @@ static uint8_t          readtemp[6];  //orignal haven't
 static uint16_t         read_remain = 0;
 static uint16_t         read_index = 4;
 static uint16_t         write_buff_index = 0;
-static uint_fast32_t    wirteaddress = 0;
+static uint_fast32_t    writeaddress = 0;
 static uint_fast32_t    readaddress = 0;
 
 bool FlashReadDeviceIdentification(SPI_Handle handle, uint16_t *uwpDeviceIdentification)
@@ -363,7 +363,7 @@ bool FLASH_read(SPI_Handle handle, void *data, uint16_t len)
 
     if(read_remain < len )//don't have enough data to read in readbuff
     {
-        if(readaddress < wirteaddress)//have at least one page in flash
+        if(readaddress < writeaddress)//have at least one page in flash
         {
             memcpy(data,readbuff+read_index,read_remain);
             FlashPageRead(handle, readaddress, &readbuff);
@@ -472,7 +472,7 @@ int_fast16_t FLASH_write(SPI_Handle handle, const void *buf, uint16_t count)
 
     if(count > PAGE_DATA_SIZE)
         return Flash_AddressInvalid;
-    if(wirteaddress > NUM_BLOCKS*NUM_PAGE_BLOCK)
+    if(writeaddress > NUM_BLOCKS*NUM_PAGE_BLOCK)
         return Flash_AddressInvalid;
 
     SemaphoreP_pend(lockSem, SemaphoreP_WAIT_FOREVER);
@@ -494,13 +494,13 @@ int_fast16_t FLASH_write(SPI_Handle handle, const void *buf, uint16_t count)
         memcpy(flashbuff+write_buff_index, buf, sizeof(uint8_t)*writebytes);
 
         /*can be replace by erase all
-         * if(!(wirteaddress & 0x1FFFF))
-            FlashBlockErase(handle,wirteaddress);*/
+         * if(!(writeaddress & 0x1FFFF))
+            FlashBlockErase(handle,writeaddress);*/
 
-        status = FlashPageProgram(handle, wirteaddress, flashbuff, PAGE_DATA_SIZE);
+        status = FlashPageProgram(handle, writeaddress, flashbuff, PAGE_DATA_SIZE);
 
         //Display_printf(displayOut, 0, 0, "STATUS = %d", status);
-        wirteaddress += 1;
+        writeaddress += 1;
 
         if(remainbytes > 0)
         {
