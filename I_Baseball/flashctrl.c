@@ -34,6 +34,7 @@ static pthread_cond_t  condflash;
 
 static sem_t spaceFlashsem;
 static sem_t countFlashsem;
+static sem_t open_flash;
 
 static uint8_t  ringbuffer[NUMFLASH][DATA_LEN];
 
@@ -56,8 +57,6 @@ static int_fast32_t udAddr = 0;
  ******************************************************************************/
 static void *flashTaskFxn(void *arg0);
 static void getdata(uint8_t *result);
-static void hextostr(uint8_t *value, char *result);
-static void strtohex(char *value, uint8_t *result);
 void flasheraseall(void);
 //int_fast16_t FLASH_read(SPI_Handle handle);
 //int_fast16_t FLASH_write(SPI_Handle handle, const void *buf, uint16_t count);
@@ -120,16 +119,6 @@ static void flashTaskInit(void)
     FLASH_initialize(spihandle);
     flasheraseall();
 
-    /*
-    while(udAddr < NUM_BLOCKS * NUM_PAGE_BLOCK * PAGE_DATA_SIZE)
-    {
-        FlashBlockErase(handle, udAddr);
-        udAddr =+ NUM_PAGE_BLOCK * PAGE_DATA_SIZE;
-    }
-    */
-
-    udAddr = 0;
-
 }
 
 static void *flashTaskFxn(void *arg0)
@@ -137,51 +126,23 @@ static void *flashTaskFxn(void *arg0)
     pthread_mutex_init(&lockbuffer, NULL);
     pthread_mutex_init(&lockflash, NULL);
     pthread_cond_init(&condflash, NULL);
+
     pthread_mutex_lock(&lockflash);
 
-    /* Variables to keep track of the file copy progress */
-    //unsigned int   bytesWritten = 0;
-    uint8_t sendData[DATA_LEN];
-    uint64_t  cnt = 0;
-
-    bool empty = false;
-
+    sem_init(&open_flash,0,0);
     flashTaskInit();
-    pthread_cond_wait(&condflash, &lockflash);
-    pthread_mutex_unlock(&lockflash);
-    while (1) {
-        pthread_mutex_lock(&lockflash);
-        while(!Sampledata)
-        {
-            pthread_cond_wait(&condflash, &lockflash);//wait pthread_cond_signal() to wake up
-        }
-        pthread_mutex_unlock(&lockflash);
-/*#ifdef debug
-        //this should be closed when using, or it will cause surge output signal
-        getTime();
-#endif*/
-        getdata(sendData);
-/*
-#ifdef debug
-        Display_printf(displayOut, 0, 0, "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
-                       sendData[0],sendData[1],sendData[2],sendData[3],sendData[4],sendData[5],sendData[6],sendData[7],sendData[8],sendData[9],
-                       sendData[10],sendData[11],sendData[12],sendData[13],sendData[14],sendData[15],sendData[16],sendData[17],sendData[18],sendData[19]);
-#endif
-*/
-        FLASH_write(spihandle, &sendData, DATA_LEN);
-        udAddr += DATA_LEN ;//address counter
-        cnt = cnt + 1;
 
-        /*if(cnt == 11250){
-            while(!empty)
-                {
-                    empty = FLASH_read(spihandle, sendData,DATA_LEN);
-                  //  Display_printf(displayOut, 0, 0, "char = %s", array);
-                    enqueue(sendData);
-                    usleep(10000);
-                }
-        }*/
-      //  cnt = 0;
+    pthread_mutex_unlock(&lockflash);
+
+    uint8_t sendData[DATA_LEN];
+
+    //wait if openflash() is not called
+    sem_wait(&open_flash);
+    while (1) {
+
+        getdata(sendData);
+
+        FLASH_write(spihandle, &sendData, DATA_LEN);
 
     }
 }
@@ -216,53 +177,9 @@ void getTime(void)
 
 void openflash(void)
 {
-
-    //uint8_t  i = 1;
-    //char *deletfile;
-    char time[13];
-    //write the begining time
- /*   if(write_init)  //orignal have
-    {
-        getTime();
-        time[0]  = ' ';
-        time[1]  = day/10  + '0';
-        time[2]  = day%10-1  + '0';
-        time[3]  = ' ';
-        time[4]  = hour/10 + '0';
-        time[5]  = hour%10 + '0';
-        time[6]  = ':';
-        time[7]  = min/10  + '0';
-        time[8]  = min%10  + '0';
-        time[9]  = ':';
-        time[10] = sec/10  + '0';
-        time[11] = sec%10  + '0';
-        time[12] = '\n';
-        //FlashPageProgram(handle, udAddr, *time, 13);
-        FLASH_write(handle, &time, 13);
-        udAddr += 13;
-        write_init = false;
-    }*/
-///////////  orignal haven't  //////////////////////
-    getTime();
-    time[0]  = ' ';
-    time[1]  = day/10  + '0';
-    time[2]  = day%10-1  + '0';
-    time[3]  = ' ';
-    time[4]  = hour/10 + '0';
-    time[5]  = hour%10 + '0';
-    time[6]  = ':';
-    time[7]  = min/10  + '0';
-    time[8]  = min%10  + '0';
-    time[9]  = ':';
-    time[10] = sec/10  + '0';
-    time[11] = sec%10  + '0';
-    time[12] = '\n';
-    //FLASH_write(spihandle, &time, 13);
-    //udAddr += 13;
-////////////////////////////////////
+    //mutex for waiting if flash is initializing
     pthread_mutex_lock(&lockflash);
-    Sampledata = true;
-    pthread_cond_signal(&condflash);
+    sem_post(&open_flash);
     pthread_mutex_unlock(&lockflash);
 }
 
@@ -324,178 +241,6 @@ static void getdata(uint8_t *result)
     // Increment the count of the number of spaces
     sem_post(&spaceFlashsem);
 
-}
-static void hextostr(uint8_t *value, char *result)
-{
-    int i;
-    uint8_t n0,n1;
-
-    for(i = 0; i < DATA_LEN; i++)
-    {
-        n0 = (value[i]>>4) & 0x0f;
-        n1 = value[i] & 0x0f;
-        switch(n0)
-        {
-            case 0x00:
-            result[2*i]='0';break;
-            case 0x01:
-            result[2*i]='1';break;
-            case 0x02:
-            result[2*i]='2';break;
-            case 0x03:
-            result[2*i]='3';break;
-            case 0x04:
-            result[2*i]='4';break;
-            case 0x05:
-            result[2*i]='5';break;
-            case 0x06:
-            result[2*i]='6';break;
-            case 0x07:
-            result[2*i]='7';break;
-            case 0x08:
-            result[2*i]='8';break;
-            case 0x09:
-            result[2*i]='9';break;
-            case 0x0a:
-            result[2*i]='a';break;
-            case 0x0b:
-            result[2*i]='b';break;
-            case 0x0c:
-            result[2*i]='c';break;
-            case 0x0d:
-            result[2*i]='d';break;
-            case 0x0e:
-            result[2*i]='e';break;
-            case 0x0f:
-            result[2*i]='f';break;
-            default:
-            result[2*i]='f';break;
-        }
-        switch(n1)
-        {
-            case 0x00:
-            result[2*i+1]='0';break;
-            case 0x01:
-            result[2*i+1]='1';break;
-            case 0x02:
-            result[2*i+1]='2';break;
-            case 0x03:
-            result[2*i+1]='3';break;
-            case 0x04:
-            result[2*i+1]='4';break;
-            case 0x05:
-            result[2*i+1]='5';break;
-            case 0x06:
-            result[2*i+1]='6';break;
-            case 0x07:
-            result[2*i+1]='7';break;
-            case 0x08:
-            result[2*i+1]='8';break;
-            case 0x09:
-            result[2*i+1]='9';break;
-            case 0x0a:
-            result[2*i+1]='a';break;
-            case 0x0b:
-            result[2*i+1]='b';break;
-            case 0x0c:
-            result[2*i+1]='c';break;
-            case 0x0d:
-            result[2*i+1]='d';break;
-            case 0x0e:
-            result[2*i+1]='e';break;
-            case 0x0f:
-            result[2*i+1]='f';break;
-            default:
-            result[2*i+1]='f';break;
-        }
-    }
-    result[2*DATA_LEN]   = '\n';
-}
-static void strtohex(char *value, uint8_t *result)
-{
-    int i;
-    uint8_t n0,n1;
-
-    for(i = 0; i < DATA_LEN*2; i=i+2)
-    {
-        n0 = value[i];
-        n1 = value[i+1];
-        result[i/2] = 0x00;
-        switch(n0)
-        {
-            case '0':
-                result[i/2] = result[i/2] | 0x00; break;
-            case '1':
-                result[i/2] = result[i/2] | 0x10; break;
-            case '2':
-                result[i/2] = result[i/2] | 0x20; break;
-            case '3':
-                result[i/2] = result[i/2] | 0x30; break;
-            case '4':
-                result[i/2] = result[i/2] | 0x40; break;
-            case '5':
-                result[i/2] = result[i/2] | 0x50; break;
-            case '6':
-                result[i/2] = result[i/2] | 0x60; break;
-            case '7':
-                result[i/2] = result[i/2] | 0x70; break;
-            case '8':
-                result[i/2] = result[i/2] | 0x80; break;
-            case '9':
-                result[i/2] = result[i/2] | 0x90; break;
-            case 'a':
-                result[i/2] = result[i/2] | 0xa0; break;
-            case 'b':
-                result[i/2] = result[i/2] | 0xb0; break;
-            case 'c':
-                result[i/2] = result[i/2] | 0xc0; break;
-            case 'd':
-                result[i/2] = result[i/2] | 0xd0; break;
-            case 'e':
-                result[i/2] = result[i/2] | 0xe0; break;
-            case 'f':
-                result[i/2] = result[i/2] | 0xf0; break;
-            default:
-                result[i/2] = result[i/2] | 0x00; break;
-        }
-        switch(n1)
-        {
-            case '0':
-                result[i/2] = result[i/2] | 0x00; break;
-            case '1':
-                result[i/2] = result[i/2] | 0x01; break;
-            case '2':
-                result[i/2] = result[i/2] | 0x02; break;
-            case '3':
-                result[i/2] = result[i/2] | 0x03; break;
-            case '4':
-                result[i/2] = result[i/2] | 0x04; break;
-            case '5':
-                result[i/2] = result[i/2] | 0x05; break;
-            case '6':
-                result[i/2] = result[i/2] | 0x06; break;
-            case '7':
-                result[i/2] = result[i/2] | 0x07; break;
-            case '8':
-                result[i/2] = result[i/2] | 0x08; break;
-            case '9':
-                result[i/2] = result[i/2] | 0x09; break;
-            case 'a':
-                result[i/2] = result[i/2] | 0x0a; break;
-            case 'b':
-                result[i/2] = result[i/2] | 0x0b; break;
-            case 'c':
-                result[i/2] = result[i/2] | 0x0c; break;
-            case 'd':
-                result[i/2] = result[i/2] | 0x0d; break;
-            case 'e':
-                result[i/2] = result[i/2] | 0x0e; break;
-            case 'f':
-                result[i/2] = result[i/2] | 0x0f; break;
-            default:
-                result[i/2] = result[i/2] | 0x00; break;
-        }
-    }
 }
 
 void outputflashdata(void)

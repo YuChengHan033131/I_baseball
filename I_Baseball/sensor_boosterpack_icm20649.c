@@ -465,6 +465,12 @@ static void icm20649Callback(uint_least8_t index)
      writeReg(REG_BANK_SEL, BANK_2);
      writeReg(ACCEL_WOM_THR, 0x04);//LSB=4mg ,range=0~1020mg, i.e. 16mg
 
+
+
+
+
+
+
      //turn on low power mode
      writeReg(REG_BANK_SEL, BANK_0);
      readReg(PWR_MGMT_1,&data,1);
@@ -490,7 +496,6 @@ static void icm20649Callback(uint_least8_t index)
      readReg(PWR_MGMT_1,&data,1);
      data &= 0xDF;
      writeReg(PWR_MGMT_1,data);
-
 
      /*reset value in semaphore*///since may have multiple WOM interrupt
      sem_getvalue(&icm20649Sem,&data);
