@@ -58,7 +58,7 @@ static void* testFxn(void *arg0){
     //sem_wait(&BLEinitDone);
     //sem_wait(&BLEconnected);
     Display_printf(displayOut,0,0,"start");
-    openflash();
+    /*openflash();
     Display_clear(displayOut);
     uint16_t i;
     uint8_t data[20] = {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
@@ -71,7 +71,17 @@ static void* testFxn(void *arg0){
         Display_printf(displayOut,0,0,"in:%d",i);
     }
     outputflashdata();
+    Display_printf(displayOut,0,0,"end");*/
+    uint8_t data[2]={0xff,0xc4};
+    int16_t data_16=data[0]*256+data[1];
+    Display_printf(displayOut,0,0,"data=%d",data[0]*256+data[1]);
+    Display_printf(displayOut,0,0,"data_16=%d",data_16);
     Display_printf(displayOut,0,0,"end");
+
+
+
+
     Display_close(displayOut);
+
     return ;
 }

@@ -54,6 +54,8 @@
 #include <xdc/runtime/Timestamp.h>
 #include <xdc/runtime/Types.h>
 
+#define NO_MOTION_THRESHOLD 1//i.e. +-0.92mg, threshold for sleep if no motion
+
 /*******************************************************************************
  *                             VARIABLES
  ******************************************************************************/
@@ -407,6 +409,19 @@ static void icm20649Callback(uint_least8_t index)
  void* test_icm2049_TaskFxn(void *arg0){
      Display_printf(displayOut,0,0,"icm taskFxn start");
 
+     /*general variables*/
+     static uint8_t sensordata[20] = {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
+     uint16_t i, j, seqNum=0;
+     uint8_t data;
+
+     /*variable of sleep if no motion*/
+     bool sample = true;
+     bool smaller = true;
+     uint16_t cnt=0;
+     int16_t current_data;
+     int32_t diff_data;//32 bytes in case of overflow in difference
+     int16_t previous_data[3]={0,0,0};
+
      /* Initialize the task */
      movementTaskInit(); //include initialize icm20649 register, sleep mode
      SensorICM20649_Activate();//leave sleep mode & activate acc, gyro
@@ -439,13 +454,6 @@ static void icm20649Callback(uint_least8_t index)
      writeReg(REG_BANK_SEL, BANK_0);
      writeReg(FIFO_RST, 0x00);
 
-
-     static uint8_t sensordata[20] = {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
-     uint16_t i, j, seqNum=0, cnt=0;
-     uint8_t data;
-     bool sample = true;
-
-
      //enable wake-on motion interrupt
      writeReg(REG_BANK_SEL, BANK_0);
      writeReg(INT_ENABLE, 0x08);
@@ -455,7 +463,7 @@ static void icm20649Callback(uint_least8_t index)
 
      //wake-on motion threshold
      writeReg(REG_BANK_SEL, BANK_2);
-     writeReg(ACCEL_WOM_THR, 0x04);//LSB=4mg ,range=0~1020mg
+     writeReg(ACCEL_WOM_THR, 0x04);//LSB=4mg ,range=0~1020mg, i.e. 16mg
 
      //turn on low power mode
      writeReg(REG_BANK_SEL, BANK_0);
@@ -494,8 +502,7 @@ static void icm20649Callback(uint_least8_t index)
      writeReg(REG_BANK_SEL, BANK_0);
      writeReg(FIFO_EN_2, 0x1e);//acc & gyr
 
-     //while(sample){
-     for(i=0;i<70;i++){//9918 times of sampling
+     while(sample){
          //enable FIFO water mark to interrupt 1
          writeReg(REG_BANK_SEL, BANK_0);
          writeReg(INT_ENABLE3, 0x01);
@@ -505,7 +512,6 @@ static void icm20649Callback(uint_least8_t index)
          /*disable acc & gyro write to FIFO*/
          // writeReg(REG_BANK_SEL, BANK_0);
          // writeReg(FIFO_EN_2, 0x00);
-
 
          for(j=0;j<2052;j=j+12){//2052=6 axis sensor*2 bytes*171 times of sample = at least amount of data in FIFO
              /*useless
@@ -525,16 +531,28 @@ static void icm20649Callback(uint_least8_t index)
             sendtoStore(sensordata);
             //Display_printf(displayOut,0,0,"in:%d",sensordata[14]*256+sensordata[15]);//adding this will cause FIFO overflow
 
-            /*end data collection if no motion for 10 second*/
-            //compare acc_x/y/z with threshold
-            /*int16_t threshold = 500;//i.e. +-0.458g
-            bool smaller = true;
+            /*end data collection if no motion for 10 second
+             * algorithm: differnce between previous sensordata < threshold*/
+            smaller = true;
             for(i=0;i<3;i++){
-                if(sensordata[i*2]*256+sensordata[i*2+1]>threshold+32768 || sensordata[i*2]*256+sensordata[i*2+1]<32768-threshold){
-                    //not in threshold
+                //turn sensordata from uint8_t*2 to int16_t
+                current_data = sensordata[i*2]*256+sensordata[i*2+1];
+                //Display_printf(displayOut,0,0,"sensordata:%d",sensordata[i*2]*256+sensordata[i*2+1]);
+                //Display_printf(displayOut,0,0,"current_data:%d",current_data);
+                //get difference
+                diff_data=current_data-previous_data[i];
+                //Display_printf(displayOut,0,0,"diff_data:%d",diff_data);
+
+                //store current data
+                previous_data[i]=current_data;
+
+                //compare difference with threshold
+                if(diff_data > NO_MOTION_THRESHOLD || diff_data < -NO_MOTION_THRESHOLD){
+                    //larger than threshold
                     smaller =false;
                     break;
                 }
+
             }
             if(smaller){
                 cnt+=1;
@@ -542,12 +560,14 @@ static void icm20649Callback(uint_least8_t index)
                 cnt = 0;
             }
 
-            if(cnt>1125/(1+sampleRateDivider)*10){//sample rate *10 second
+            if(cnt>1125/(1+sampleRateDivider)*5){//sample rate *5 second
                 sample = false;
+                Display_printf(displayOut,0,0,"sleep");
                 break;
-            }*/
+            }
          }
-         //Display_printf(displayOut,0,0,"cnt:%d",cnt);
+         Display_printf(displayOut,0,0,"cnt:%d",cnt);
+         //sample = false;//test
      }
 
      Display_printf(displayOut,0,0,"done data collection");
