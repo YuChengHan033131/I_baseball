@@ -576,6 +576,8 @@ static void icm20649Callback(uint_least8_t index)
      }
 
      Display_printf(displayOut,0,0,"done data collection");
+     closeflash();
+
      //sem_wait(&BLEinitDone);
      //sem_wait(&BLEconnected);
      //send all of the flash data through BLE

@@ -25,7 +25,6 @@ const struct timespec flashts = {
 static SPI_Handle      spihandle;
 static pthread_t       flashTask;
 
-static volatile bool   Sampledata = false;
 static volatile bool   write_init = true;
 
 static pthread_mutex_t lockbuffer;
@@ -35,6 +34,7 @@ static pthread_cond_t  condflash;
 static sem_t spaceFlashsem;
 static sem_t countFlashsem;
 static sem_t open_flash;
+static bool close_flash;
 
 static uint8_t  ringbuffer[NUMFLASH][DATA_LEN];
 
@@ -138,13 +138,24 @@ static void *flashTaskFxn(void *arg0)
 
     //wait if openflash() is not called
     sem_wait(&open_flash);
-    while (1) {
+    Display_printf(displayOut,0,0,"flash opened");
+    while (!close_flash) {
+
+        // Wait if there are no items in the buffer
+        sem_wait(&countFlashsem);
+
+        //check if the post signal is for close flash
+        if(close_flash){
+            break;
+        }
 
         getdata(sendData);
 
         FLASH_write(spihandle, &sendData, DATA_LEN);
 
     }
+    Display_printf(displayOut,0,0,"flash closed");
+
 }
 
 /*
@@ -180,39 +191,22 @@ void openflash(void)
     //mutex for waiting if flash is initializing
     pthread_mutex_lock(&lockflash);
     sem_post(&open_flash);
+    close_flash = false;
     pthread_mutex_unlock(&lockflash);
 }
 
 void closeflash(void)
 {
-    char time[13];
+    //wait until ringbuff empty
+    uint8_t data;
+    do{
+        sem_getvalue(&countFlashsem,&data);
+    }while(data>0);
 
-    pthread_mutex_lock(&lockflash);
-    Sampledata = false;
-    pthread_mutex_unlock(&lockflash);
+    close_flash = true;
 
-    getTime();
-    time[0] = ' ';
-    time[1] = day/10  + '0';
-    time[2] = day%10-1  + '0';
-    time[3] = ' ';
-    time[4] = hour/10 + '0';
-    time[5] = hour%10 + '0';
-    time[6] = ':';
-    time[7] = min/10  + '0';
-    time[8] = min%10  + '0';
-    time[9] = ':';
-    time[10] = sec/10  + '0';
-    time[11] = sec%10  + '0';
-    time[12] = '\n';
-
-    //FlashPageProgram(handle, udAddr, *time, 13);
-    FLASH_write(spihandle, &time, 2048-(udAddr%2048));//13
-    udAddr += 2048-(udAddr%2048); //orignal haven't
-    //FlashWriteDisable(handle);
-    //udAddr += 13;
-    //flash_change_flag = false;  //orignal haven't
-    //write_init = true;  //orignal haven't
+    //unlock wait before getdata()
+    sem_post(&countFlashsem);
 }
 
 void sendtoStore(uint8_t *value)
@@ -231,8 +225,6 @@ void sendtoStore(uint8_t *value)
 
 static void getdata(uint8_t *result)
 {
-    // Wait if there are no items in the buffer
-    sem_wait(&countFlashsem);
 
     pthread_mutex_lock(&lockbuffer);
     memcpy(result, ringbuffer + ((out++) & (NUMFLASH-1)), 20);
