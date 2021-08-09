@@ -69,6 +69,7 @@ void closeflash(void);
 extern void outputflashdata(void);
 //void stopflash(void);
 void sendtoStore(uint8_t *value);
+extern void flasheraseall(void);
 void getTime(void);
 int clock_init(void);
 #ifdef __cplusplus

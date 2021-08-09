@@ -34,6 +34,7 @@ static pthread_cond_t  condflash;
 static sem_t spaceFlashsem;
 static sem_t countFlashsem;
 static sem_t open_flash;
+static sem_t flash_closed;
 static bool close_flash;
 
 static uint8_t  ringbuffer[NUMFLASH][DATA_LEN];
@@ -96,6 +97,7 @@ void flash_createTask(void)
     // Initializing the semaphore
     sem_init(&spaceFlashsem,0,NUMFLASH);
     sem_init(&countFlashsem,0,0);
+    sem_init(&flash_closed,0,0);
 }
 
 static void flashTaskInit(void)
@@ -158,8 +160,12 @@ static void *flashTaskFxn(void *arg0)
         FLASH_write(spihandle, &sendData, DATA_LEN);
 
     }
-    Display_printf(displayOut,0,0,"flash closed");
+    //flush flashbuff which is not full to flash
+
+
     write_writeaddress(spihandle);
+    sem_post(&flash_closed);
+    Display_printf(displayOut,0,0,"flash closed");
 
 
 }
@@ -213,6 +219,9 @@ void closeflash(void)
 
     //unlock wait before getdata()
     sem_post(&countFlashsem);
+
+    //wait until flash taskFxn done closing flash
+    sem_wait(&flash_closed);
 }
 
 void sendtoStore(uint8_t *value)

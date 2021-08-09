@@ -58,8 +58,9 @@ static void* testFxn(void *arg0){
     //sem_wait(&BLEinitDone);
     //sem_wait(&BLEconnected);
     Display_printf(displayOut,0,0,"start");
-    openflash();
-    closeflash();
+    //openflash();
+    //closeflash();
+    flasheraseall();
     Display_printf(displayOut,0,0,"close");
     /*Display_clear(displayOut);
     uint16_t i;
