@@ -596,21 +596,44 @@ bool get_writeaddress(SPI_Handle handle){
     //read page 0 of flash to know last write address
     FlashPageRead(handle, 0, page0);
     uint16_t i;
-    //find newest record writeaddress
+    //find the last record writeaddress
     for(i=4;i<PAGE_DATA_SIZE+4;i=i+3){
         if(page0[i]==0xff && page0[i+1]==0xff && page0[i+2]==0xff){
             //update writeaddress
             if(i==4){//no record writeaddress in flash
                 writeaddress = 1;
             }else{
-                writeaddress = page0[i-3]*256^2+page0[i-2]*256+page0[i-1];
+                writeaddress = (uint_fast32_t)page0[i-3]>>16 | (uint_fast32_t)page0[i-2]>>8 | (uint_fast32_t)page0[i-1];
+                writeaddress+=1;
             }
             break;
         }
     }
-
     //test
-    Display_printf(displayOut,0,0,"writeaddress=%d",writeaddress);
+    Display_printf(displayOut,0,0,"get writeaddress=%d",writeaddress);
     return true;
 
+}
+
+bool write_writeaddress(SPI_Handle handle){
+    //read page 0 of flash to know where to write
+    FlashPageRead(handle, 0, page0);
+
+
+    //find the last record writeaddress
+    uint16_t i;
+    for(i=4;i<PAGE_DATA_SIZE+4;i=i+3){
+        if(page0[i]==0xff && page0[i+1]==0xff && page0[i+2]==0xff){
+            //write writeaddress in page0
+            page0[i  ]=(uint8_t)(writeaddress>>16);
+            page0[i+1]=(uint8_t)(writeaddress>>8);
+            page0[i+2]=(uint8_t)writeaddress;
+            break;
+        }
+    }
+
+    //write page0 back to flash page 0
+    FlashPageProgram(handle, 0, page0+4, PAGE_DATA_SIZE);
+
+    return true;
 }

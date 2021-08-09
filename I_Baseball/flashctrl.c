@@ -130,7 +130,7 @@ static void *flashTaskFxn(void *arg0)
 
     sem_init(&open_flash,0,0);
     flashTaskInit();
-    flasheraseall();//should be remove
+    //flasheraseall();//should be remove
 
     pthread_mutex_unlock(&lockflash);
 
@@ -159,6 +159,8 @@ static void *flashTaskFxn(void *arg0)
 
     }
     Display_printf(displayOut,0,0,"flash closed");
+    write_writeaddress(spihandle);
+
 
 }
 
