@@ -142,44 +142,46 @@ static void *flashTaskFxn(void *arg0)
 
     uint8_t sendData[DATA_LEN];
 
-    //wait if openflash() is not called
-    sem_wait(&open_flash);
+    while(1){
+        //wait if openflash() is not called
+        sem_wait(&open_flash);
 
-    pthread_mutex_lock(&lockflash);
+        pthread_mutex_lock(&lockflash);
 
-    Display_printf(displayOut,0,0,"flash opened");
+        Display_printf(displayOut,0,0,"flash opened");
 
-    //get write address from flash
-    get_writeaddress(spihandle);
+        //get write address from flash
+        get_writeaddress(spihandle);
 
-    while (!close_flash) {
+        while (!close_flash) {
 
-        // Wait if there are no items in the buffer
-        sem_wait(&countFlashsem);
+            // Wait if there are no items in the buffer
+            sem_wait(&countFlashsem);
 
-        //check if the post signal is for close flash
-        if(close_flash){
-            break;
+            //check if the post signal is for close flash
+            if(close_flash){
+                break;
+            }
+
+            getdata(sendData);
+
+            FLASH_write(spihandle, &sendData, DATA_LEN);
+
         }
 
-        getdata(sendData);
-
+        //adding end of data (EOD)
+        memcpy(sendData,EOD,12);
         FLASH_write(spihandle, &sendData, DATA_LEN);
 
+        //flush flashbuff
+        FLASH_flush(spihandle);
+
+        write_writeaddress(spihandle);
+        sem_post(&flash_closed);
+        Display_printf(displayOut,0,0,"flash closed");
+
+        pthread_mutex_unlock(&lockflash);
     }
-
-    //adding end of data (EOD)
-    memcpy(sendData,EOD,12);
-    FLASH_write(spihandle, &sendData, DATA_LEN);
-
-    //flush flashbuff
-    FLASH_flush(spihandle);
-
-    write_writeaddress(spihandle);
-    sem_post(&flash_closed);
-    Display_printf(displayOut,0,0,"flash closed");
-
-    pthread_mutex_unlock(&lockflash);
 }
 
 /*
