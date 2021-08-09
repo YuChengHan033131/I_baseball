@@ -951,7 +951,7 @@ static void Baseball6xs_processCharChangeEvt(uint8_t paramID)
                 }
                 else if(Baseball6xsConfig != 0x13 && newValue == 0x13)
                 {
-                    outputflashdata();
+                    //outputflashdata();
                 }
                /*
                 else if(Baseball6xsConfig == 0x10 && newValue == 0xFF)

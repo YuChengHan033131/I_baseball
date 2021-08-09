@@ -20,6 +20,7 @@
 
 extern Display_Handle displayOut;
 SemaphoreP_Handle lockSem;
+uint8_t EOD[12]={0x80,0x01,0x80,0x01,0x80,0x01,0x80,0x04,0x80,0x01,0x80,0x01};
 
 //SPI_Handle SDSPI_open(SPI_Handle handle, SD_Params *params);
 /*
@@ -54,7 +55,8 @@ static uint16_t         read_remain = 0;
 static uint16_t         read_index = 4;
 static uint16_t         write_buff_index = 0;
 static uint_fast32_t    writeaddress = 1;
-static uint_fast32_t    readaddress = 1;
+static uint_fast32_t    readaddress;
+static uint32_t    readaddress_end;
 
 bool FlashReadDeviceIdentification(SPI_Handle handle, uint16_t *uwpDeviceIdentification)
 {
@@ -345,7 +347,9 @@ int_fast16_t FlashPageRead(SPI_Handle handle, uint_fast32_t udAddr, void *pArray
  *
  * @param:  uint16_t len = length of read data in bytes
  *
- * @return: empty = if true, there are no data copy to void* data, otherwise false
+ * @return: if data read is end of data then return false, otherwise true
+ *
+ * @caution: should only be called in output_flash_data()
  *
  * @description: read data from in order of readbuff, flash, flashbuff.
  * only when previous order are empty, then can read data from next order.
@@ -355,7 +359,6 @@ int_fast16_t FlashPageRead(SPI_Handle handle, uint_fast32_t udAddr, void *pArray
  */
 bool FLASH_read(SPI_Handle handle, void *data, uint16_t len)
 {
-    bool empty = false;
     uint16_t cnt;
     //cast all kind of data pointer to smallest length pointer uint8_t
     data = (uint8_t*)data;
@@ -363,20 +366,11 @@ bool FLASH_read(SPI_Handle handle, void *data, uint16_t len)
 
     if(read_remain < len )//don't have enough data to read in readbuff
     {
-        if(readaddress < writeaddress)//have at least one page in flash
+        if(readaddress <= readaddress_end)//have at least one page in flash
         {
             memcpy(data,readbuff+read_index,read_remain);
             FlashPageRead(handle, readaddress, &readbuff);
             readaddress += 1;
-/*
-            for(i = 0; i<6; i++)
-            {
-                readtemp[i] = readbuff[i+1025];
-            }
-            Display_printf(displayOut, 0, 0, "%s", readbuff+4);
-            Display_printf(displayOut, 0, 0, "%s", readtemp);
-            Display_printf(displayOut, 0, 0, "%s", readbuff+1031);
-*/
 
             cnt = len  - read_remain;
             memcpy(data+read_remain, readbuff+4, cnt);
@@ -386,22 +380,8 @@ bool FLASH_read(SPI_Handle handle, void *data, uint16_t len)
         }
         else//readbuff don't have enough data(read_remain < len) and flash empty
         {
-            //read remain data in readbuff, read_remain=0 is fine
-            memcpy(data,readbuff+read_index,read_remain);
-            if((len-read_remain)<=write_buff_index){//flashbuff has enough data to read
-                memcpy(data+read_remain,flashbuff,len-read_remain);
-
-                //shifting in readbuff to remove data been read
-                uint8_t shifted[write_buff_index-(len-read_remain)];
-                memcpy(shifted,flashbuff+(len-read_remain),write_buff_index-(len-read_remain));
-                memcpy(flashbuff,shifted,write_buff_index-(len-read_remain));
-                write_buff_index-=(len-read_remain);
-            }else{//flashbuff don't have enough data to read
-                empty = true;
-            }
-            read_index += read_remain;
-            read_remain = 0;
-
+            Display_printf(displayOut, 0, 0, "shouldn't happen, data incomplete");
+            return false;
         }
     }
     else//read from readbuff
@@ -409,11 +389,29 @@ bool FLASH_read(SPI_Handle handle, void *data, uint16_t len)
         memcpy(data, readbuff+read_index, len );
         read_index += len ;
         read_remain -= len ;
+
+    }
+
+    //check if is end of data or not
+    uint8_t i;
+    bool check=true;
+
+    for(i=0;i<12;i++){
+        if( ((uint8_t*)data)[i] != EOD[i]){
+            check=false;
+            break;
+        }
     }
 
     SemaphoreP_post(lockSem);
+    if(check){
+        //reset readbuff
+        read_remain = 0;
+        return false;
+    }else{
+        return true;
+    }
 
-    return (empty);
 }
 
 int_fast16_t FlashPageProgram(SPI_Handle handle, uint_fast32_t udAddr,const void *pArray, uint_fast32_t udNrOfElementsInArray)
@@ -514,6 +512,20 @@ int_fast16_t FLASH_write(SPI_Handle handle, const void *buf, uint16_t count)
     return status;
 }
 
+/* @fn : FLASH_flush
+ *
+ * @brief : write flashbuff into flash no matter it's full or not
+ *
+ * @param :¡@SPI_Handle handle
+ * */
+bool FLASH_flush(SPI_Handle handle){
+
+    FlashPageProgram(handle, writeaddress, flashbuff, PAGE_DATA_SIZE);
+    write_buff_index = 0;
+    return true;
+
+}
+
 static inline void assertCS(void)
 {
     GPIO_write(FLASH_nCS, 0);  //orignal have
@@ -595,7 +607,7 @@ bool FlashECC(SPI_Handle handle, bool value){
  *
  * @brief : get writeaddress store in flash page 1 and update it
  *
- * @return : true if success
+ * @return : true if success, false if page0 is full
  *
  * @description ¡G Page0 of flash is use to store the end address(writeaddress)
  *                  of each set of data.
@@ -608,8 +620,11 @@ bool get_writeaddress(SPI_Handle handle){
     FlashPageRead(handle, 0, page0);
     uint16_t i;
     //find the last record writeaddress
-    for(i=4;i<PAGE_DATA_SIZE+4;i=i+3){
-        if(page0[i]==0xff && page0[i+1]==0xff && page0[i+2]==0xff){
+    for(i=4;i<=PAGE_DATA_SIZE+4;i=i+3){
+        if(i==PAGE_DATA_SIZE+4){//page0 full
+            Display_printf(displayOut,0,0,"page0 full",writeaddress);
+            return false;
+        }else if(page0[i]==0xff && page0[i+1]==0xff && page0[i+2]==0xff){
             //update writeaddress
             if(i==4){//no record writeaddress in flash
                 writeaddress = 1;
@@ -620,8 +635,7 @@ bool get_writeaddress(SPI_Handle handle){
             break;
         }
     }
-    //test
-    Display_printf(displayOut,0,0,"get writeaddress=%d",writeaddress);
+    Display_printf(displayOut,0,0,"get_writeaddress=%d",writeaddress);//test
     return true;
 
 }
@@ -629,7 +643,7 @@ bool get_writeaddress(SPI_Handle handle){
  *
  * @brief : store current writeaddress to flash
  *
- * @return : true if success
+ * @return : true if success, false if page0 full
  *
  * @description ¡G read page0 in flash, add in new writeaddress
  *              and store it back to flash
@@ -641,8 +655,11 @@ bool write_writeaddress(SPI_Handle handle){
 
     //find the last record writeaddress
     uint16_t i;
-    for(i=4;i<PAGE_DATA_SIZE+4;i=i+3){
-        if(page0[i]==0xff && page0[i+1]==0xff && page0[i+2]==0xff){
+    for(i=4;i<=PAGE_DATA_SIZE+4;i=i+3){
+        if(i==PAGE_DATA_SIZE+4){//page0 full
+            Display_printf(displayOut,0,0,"page0 full");
+            return false;
+        }else if(page0[i]==0xff && page0[i+1]==0xff && page0[i+2]==0xff){
             //write writeaddress in page0
             page0[i  ]=(uint8_t)(writeaddress>>16);
             page0[i+1]=(uint8_t)(writeaddress>>8);
@@ -653,6 +670,53 @@ bool write_writeaddress(SPI_Handle handle){
 
     //write page0 back to flash page 0
     FlashPageProgram(handle, 0, page0+4, PAGE_DATA_SIZE);
-
+    Display_printf(displayOut,0,0,"write_writeaddress=%d",writeaddress);//test
     return true;
+}
+/* @name : output_flash_data
+ *
+ * @param : SPI_Handle handle
+ *
+ * @param : uint16_t set_number indicate which set of data to output in flash
+ *
+ * @return : return true if set_number exist in flash and successfully output, otherwise false
+ *
+ * @description ¡G read flash page0 to check the starting and ending page of data, then output
+ *
+ * @caution : should't be called while writing data to flash(i.e. between openflash(), closeflash())
+ *            should be called after flash initialize.
+ *
+ * */
+bool output_flash_data(SPI_Handle handle, uint16_t set_number){
+    //read page 0 of flash to convert set_number to page address
+    FlashPageRead(handle, 0, page0);
+
+    //get end address of data by set_number
+    readaddress_end = (uint32_t)(page0[set_number*3+4  ]>>16) |
+                      (uint32_t)(page0[set_number*3+4+1]>>8) |
+                      (uint32_t) page0[set_number*3+4+2];
+
+    //check if set_number is valid
+    if(readaddress_end==0x00ffffff){//invalid set_number
+        return false;
+    }
+
+    //get start address of data by set_number
+    if(set_number == 0){
+        readaddress = 1;
+    }else{
+        readaddress = (uint32_t)(page0[set_number*3+4-3]>>16) |
+                      (uint32_t)(page0[set_number*3+4-2]>>8) |
+                      (uint32_t) page0[set_number*3+4-1]+1;//previous end address +1
+    }
+
+    //output data in those pages
+    uint8_t sendData[DATA_LEN];
+    while(FLASH_read(handle, sendData,DATA_LEN)){
+        Display_printf(displayOut,0,0,"out:%d",sendData[12]*256+sendData[13]);
+        Display_printf(displayOut,0,0,"accx:%d",sendData[0]*256+sendData[1]);
+        Display_printf(displayOut,0,0,"accy:%d",sendData[2]*256+sendData[3]);
+        Display_printf(displayOut,0,0,"accz:%d",sendData[4]*256+sendData[5]);
+    }
+
 }

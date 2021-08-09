@@ -48,7 +48,6 @@ extern "C"
 
 //buffer configuration
 #define NUMFLASH    256 //2^x, ex. 16, 32, 64
-#define DATA_LEN    20
 
 /* String conversion macro */
 #define STR_(n)             #n
@@ -66,10 +65,11 @@ extern "C"
 void flash_createTask(void);
 void openflash(void);
 void closeflash(void);
-extern void outputflashdata(void);
+extern bool outputflashdata(uint16_t set_number);
 //void stopflash(void);
 void sendtoStore(uint8_t *value);
 extern void flasheraseall(void);
+uint16_t total_set_number(void);
 void getTime(void);
 int clock_init(void);
 #ifdef __cplusplus

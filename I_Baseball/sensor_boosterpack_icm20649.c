@@ -426,6 +426,7 @@ static void icm20649Callback(uint_least8_t index)
      movementTaskInit(); //include initialize icm20649 register, sleep mode
      SensorICM20649_Activate();//leave sleep mode & activate acc, gyro
 
+     //flasheraseall();//for testing only
      openflash();
 
      uint8_t sampleRateDivider=0;
@@ -571,8 +572,7 @@ static void icm20649Callback(uint_least8_t index)
                 break;
             }
          }
-         Display_printf(displayOut,0,0,"cnt:%d",cnt);
-         //sample = false;//test
+         //Display_printf(displayOut,0,0,"cnt:%d",cnt);
      }
 
 
@@ -581,7 +581,7 @@ static void icm20649Callback(uint_least8_t index)
      //sem_wait(&BLEinitDone);
      //sem_wait(&BLEconnected);
      //send all of the flash data through BLE
-     outputflashdata();
+     outputflashdata((total_set_number()-1));
      Display_printf(displayOut,0,0,"end");
 
 

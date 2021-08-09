@@ -38,6 +38,7 @@ static sem_t flash_closed;
 static bool close_flash;
 
 static uint8_t  ringbuffer[NUMFLASH][DATA_LEN];
+static uint8_t  page_zero[PAGE_DATA_SIZE+4];
 
 
 static uint16_t in  = 0;
@@ -53,6 +54,8 @@ static uint32_t sec;
 extern Display_Handle displayOut;
 
 static int_fast32_t udAddr = 0;
+
+
 /*******************************************************************************
  *                                  LOCAL FUNCTIONS
  ******************************************************************************/
@@ -128,6 +131,7 @@ static void *flashTaskFxn(void *arg0)
     pthread_mutex_init(&lockflash, NULL);
     pthread_cond_init(&condflash, NULL);
 
+
     pthread_mutex_lock(&lockflash);
 
     sem_init(&open_flash,0,0);
@@ -140,6 +144,9 @@ static void *flashTaskFxn(void *arg0)
 
     //wait if openflash() is not called
     sem_wait(&open_flash);
+
+    pthread_mutex_lock(&lockflash);
+
     Display_printf(displayOut,0,0,"flash opened");
 
     //get write address from flash
@@ -160,14 +167,19 @@ static void *flashTaskFxn(void *arg0)
         FLASH_write(spihandle, &sendData, DATA_LEN);
 
     }
-    //flush flashbuff which is not full to flash
 
+    //adding end of data (EOD)
+    memcpy(sendData,EOD,12);
+    FLASH_write(spihandle, &sendData, DATA_LEN);
+
+    //flush flashbuff
+    FLASH_flush(spihandle);
 
     write_writeaddress(spihandle);
     sem_post(&flash_closed);
     Display_printf(displayOut,0,0,"flash closed");
 
-
+    pthread_mutex_unlock(&lockflash);
 }
 
 /*
@@ -249,34 +261,26 @@ static void getdata(uint8_t *result)
     sem_post(&spaceFlashsem);
 
 }
-
-void outputflashdata(void)
+/* @name : outputflashdata
+ *
+ * @param : uint16_t set_number indicate which set of data to output in flash
+ *
+ * @return : return if set_number exist in flash and successfully output
+ *
+ * @description ¡G read flash page0 to check the starting and ending page of data, then output
+ *
+ * @caution : should't be called while writing data to flash(i.e. between openflash(), closeflash())
+ *            should be called after flash initialize.
+ *
+ * */
+bool outputflashdata(uint16_t set_number)
 {
-    //FLASH_read(spihandle);
-
-    bool empty = false;
-
-    uint8_t sendData[DATA_LEN];
-    while(!empty)
-    {
-        empty = FLASH_read(spihandle, sendData,DATA_LEN);
-        if(!empty){
-            //enqueue(sendData);
-            //usleep(10000);
-            Display_printf(displayOut,0,0,"out:%d",sendData[12]*256+sendData[13]);
-            Display_printf(displayOut,0,0,"accx:%d",sendData[0]*256+sendData[1]);
-            Display_printf(displayOut,0,0,"accy:%d",sendData[2]*256+sendData[3]);
-            Display_printf(displayOut,0,0,"accz:%d",sendData[4]*256+sendData[5]);
-
-
-        }
-    }
-    //send remain data in flashbuff & readbuff
-
-
-
-
+    pthread_mutex_lock(&lockflash);
+    output_flash_data(spihandle, set_number);
+    pthread_mutex_unlock(&lockflash);
+    return true;
 }
+
 void flasheraseall(void)
 {
     udAddr = 0;
@@ -289,4 +293,26 @@ void flasheraseall(void)
         udAddr += NUM_PAGE_BLOCK;
     }
     udAddr = 0;
+}
+/* @name : total_set_number
+ *
+ * @brief : get current number of data sets stored in flash
+ *
+ * @return : number of data sets
+ * */
+uint16_t total_set_number(void){
+
+    pthread_mutex_lock(&lockflash);
+    //read page 0 of flash to count set_number
+    FlashPageRead(spihandle, 0, page_zero);
+    pthread_mutex_unlock(&lockflash);
+
+    uint16_t i,num=0;
+    for(i=4;i<=PAGE_DATA_SIZE+4;i=i+3){
+        if(page_zero[i]==0xff && page_zero[i+1]==0xff && page_zero[i+2]==0xff){
+            break;
+        }
+        num+=1;
+    }
+    return num;
 }

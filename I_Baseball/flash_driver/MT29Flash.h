@@ -34,11 +34,14 @@ extern "C" {
 #define STATUS_REG_ADDR         0xC0
 
 #define FLASH_WIDTH             8               /* Flash data width */
+#define DATA_LEN                20
 #define PAGE_DATA_SIZE          2112            /* Page data size in bytes , can set to 2176 if ECC disable*/
 #define NUM_BLOCKS              2048            /* Number of blocks*/
 #define NUM_PAGE_BLOCK          64              /* Number of pages for block*/
 //#define NUM_PLANES              1               /* Number of planes*/
 #define FLASH_SIZE              PAGE_DATA_SIZE*NUM_PAGE_BLOCK*NUM_BLOCKS
+
+extern uint8_t EOD[12];
 
 bool waitUntilReady(SPI_Handle handle);
 bool FlashReadStatusRegister(SPI_Handle handle, uint8_t *rxBuf);
@@ -53,11 +56,13 @@ int_fast16_t FlashPageRead(SPI_Handle handle, uint_fast32_t udAddr, void *pArray
 int_fast16_t FlashPageProgram(SPI_Handle handle, uint_fast32_t udAddr,const void *pArray, uint_fast32_t udNrOfElementsInArray);
 bool FLASH_read(SPI_Handle handle, void *data, uint16_t len);
 int_fast16_t FLASH_write(SPI_Handle handle, const void *buf, uint16_t count);
+bool FLASH_flush(SPI_Handle handle);
 
 int_fast16_t FlashWriteEnable(SPI_Handle handle);
 int_fast16_t FlashWriteDisable(SPI_Handle handle);
 bool get_writeaddress(SPI_Handle handle);
 bool write_writeaddress(SPI_Handle handle);
+bool output_flash_data(SPI_Handle handle, uint16_t set_number);
 
 enum {
     Flash_Success = 0,
