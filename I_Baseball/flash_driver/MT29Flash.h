@@ -56,6 +56,13 @@ int_fast16_t FLASH_write(SPI_Handle handle, const void *buf, uint16_t count);
 
 int_fast16_t FlashWriteEnable(SPI_Handle handle);
 int_fast16_t FlashWriteDisable(SPI_Handle handle);
+/* @name : writeaddress_update
+ *
+ * @brief : get writeaddress store in flash page 1 and update it
+ *
+ * @return : true if success
+ * */
+bool get_writeaddress(SPI_Handle handle);
 
 enum {
     Flash_Success = 0,

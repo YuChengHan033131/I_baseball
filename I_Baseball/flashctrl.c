@@ -117,7 +117,6 @@ static void flashTaskInit(void)
   //  usleep(250);//a minimum of 250us must elapse before issuing a RESET (FFh) command
     usleep(250);
     FLASH_initialize(spihandle);
-    flasheraseall();
 
 }
 
@@ -131,6 +130,7 @@ static void *flashTaskFxn(void *arg0)
 
     sem_init(&open_flash,0,0);
     flashTaskInit();
+    flasheraseall();//should be remove
 
     pthread_mutex_unlock(&lockflash);
 
@@ -139,6 +139,10 @@ static void *flashTaskFxn(void *arg0)
     //wait if openflash() is not called
     sem_wait(&open_flash);
     Display_printf(displayOut,0,0,"flash opened");
+
+    //get write address from flash
+    get_writeaddress(spihandle);
+
     while (!close_flash) {
 
         // Wait if there are no items in the buffer

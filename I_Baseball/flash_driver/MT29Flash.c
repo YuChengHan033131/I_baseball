@@ -49,12 +49,12 @@ bool test_change = false;  //orignal haven't
 
 static uint8_t          flashbuff[PAGE_DATA_SIZE];
 static uint8_t          readbuff[PAGE_DATA_SIZE+4];
-static uint8_t          readtemp[6];  //orignal haven't
+static uint8_t          page0[PAGE_DATA_SIZE+4];
 static uint16_t         read_remain = 0;
 static uint16_t         read_index = 4;
 static uint16_t         write_buff_index = 0;
-static uint_fast32_t    writeaddress = 0;
-static uint_fast32_t    readaddress = 0;
+static uint_fast32_t    writeaddress = 1;
+static uint_fast32_t    readaddress = 1;
 
 bool FlashReadDeviceIdentification(SPI_Handle handle, uint16_t *uwpDeviceIdentification)
 {
@@ -590,4 +590,27 @@ bool FlashECC(SPI_Handle handle, bool value){
     status = status & spiTransfer(handle, NULL, &chars, 3);//true if success
     deassertCS();
     return status;
+}
+
+bool get_writeaddress(SPI_Handle handle){
+    //read page 0 of flash to know last write address
+    FlashPageRead(handle, 0, page0);
+    uint16_t i;
+    //find newest record writeaddress
+    for(i=4;i<PAGE_DATA_SIZE+4;i=i+3){
+        if(page0[i]==0xff && page0[i+1]==0xff && page0[i+2]==0xff){
+            //update writeaddress
+            if(i==4){//no record writeaddress in flash
+                writeaddress = 1;
+            }else{
+                writeaddress = page0[i-3]*256^2+page0[i-2]*256+page0[i-1];
+            }
+            break;
+        }
+    }
+
+    //test
+    Display_printf(displayOut,0,0,"writeaddress=%d",writeaddress);
+    return true;
+
 }
