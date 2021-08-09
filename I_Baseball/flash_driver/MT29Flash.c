@@ -591,7 +591,18 @@ bool FlashECC(SPI_Handle handle, bool value){
     deassertCS();
     return status;
 }
-
+/* @name : get_writeaddress
+ *
+ * @brief : get writeaddress store in flash page 1 and update it
+ *
+ * @return : true if success
+ *
+ * @description ¡G Page0 of flash is use to store the end address(writeaddress)
+ *                  of each set of data.
+ *                Each end address is stored in 3 bytes, so maximunm of 704 end address can be stored.
+ *                The last end address will be 3 bytes before 0xff, since flash default is all 1 for all bit.
+ *                New writeaddress will be the last end address +1.
+ * */
 bool get_writeaddress(SPI_Handle handle){
     //read page 0 of flash to know last write address
     FlashPageRead(handle, 0, page0);
@@ -614,7 +625,15 @@ bool get_writeaddress(SPI_Handle handle){
     return true;
 
 }
-
+/* @name : write_writeaddress
+ *
+ * @brief : store current writeaddress to flash
+ *
+ * @return : true if success
+ *
+ * @description ¡G read page0 in flash, add in new writeaddress
+ *              and store it back to flash
+ * */
 bool write_writeaddress(SPI_Handle handle){
     //read page 0 of flash to know where to write
     FlashPageRead(handle, 0, page0);
