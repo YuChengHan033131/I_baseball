@@ -912,69 +912,28 @@ static void Baseball6xs_processCharChangeEvt(uint8_t paramID)
         if (Baseball6xsConfig != SENSORBSP_ERROR_DATA)
         {
             Baseball6xs_getParameter(BASEBALL6xs_CONF, &newValue);
-
-            if (newValue == SENSORBSP_CFG_SENSOR_DISABLE)
-            {
-                /* Reset characteristics */
-                initBaseball6xsCharacteristicValue(BASEBALL6xs_DATA, 0, BASEBALL6xs_DATA_LEN);
-
-#ifndef DISPLAY_DISABLE
-                Display_print0(displayOut, 0, 0, "ADC disabled!");
-#endif
-
+            switch(newValue){
+            case 1:
+                Display_printf(displayOut,0,0,"Choose data output");
+                break;
+            case 2:
+                Display_printf(displayOut,0,0,"All data output");
+                break;
+            case 3:
+                Display_printf(displayOut,0,0,"Erase data done");
+                break;
+            case 4:
+                Display_printf(displayOut,0,0,"Exit");
+                break;
+            default:
+                Display_printf(displayOut,0,0,"invalid output");
+                break;
             }
-            else
-            {
-                //SensorBMP280_Activate();
-                //SensorBHI160_Activate();
-                /*
-                Timer_start(timer0);
-                HwiP_enableInterrupt(40);
-                MAP_ADC14_enableConversion();
+            //end signal
+            sleep(1);
+            uint8_t data[20] = {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
+            enqueue(data);
 
-                */
-                switch(newValue){
-                case 1:
-                    Display_printf(displayOut,0,0,"Choose data output");
-                    break;
-                case 2:
-                    Display_printf(displayOut,0,0,"All data output");
-                    break;
-                case 3:
-                    Display_printf(displayOut,0,0,"Erase data");
-                    break;
-                case 4:
-                    Display_printf(displayOut,0,0,"Exit");
-                    break;
-                default:
-                    Display_printf(displayOut,0,0,"invalid output");
-                    break;
-                }
-                //end signal
-                sleep(1);
-                uint8_t data[20] = {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
-                enqueue(data);
-
-
-                /*if(Baseball6xsConfig != 0x11 && newValue == 0x11)
-                {
-                    openflash();
-                    SensorA301_Deactivate();
-                    Timer_stop(timer0);
-                    HwiP_disableInterrupt(40);
-                    MAP_ADC14_disableConversion();
-                    sem_post(&BLEconnected);
-                }
-                else if(Baseball6xsConfig != 0x12 && newValue == 0x12)
-                {
-                    openflash();
-                    Timer_start(timer0);
-                    HwiP_enableInterrupt(40);
-                    MAP_ADC14_enableConversion();
-                    SensorA301_Activate(false);
-                }*/
-
-            }
         } else
         {
             /* Make sure the previous characteristics value is restored */
