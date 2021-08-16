@@ -64,6 +64,7 @@
 #include "sensor_configuration.h"
 #include "Board.h"
 #include "platform.h"
+#include "BLEsend.h"
 
 extern sem_t BLEconnected;
 /*******************************************************************************
@@ -930,9 +931,32 @@ static void Baseball6xs_processCharChangeEvt(uint8_t paramID)
                 Timer_start(timer0);
                 HwiP_enableInterrupt(40);
                 MAP_ADC14_enableConversion();
-                
+
                 */
-                if(Baseball6xsConfig != 0x11 && newValue == 0x11)
+                switch(newValue){
+                case 1:
+                    Display_printf(displayOut,0,0,"Choose data output");
+                    break;
+                case 2:
+                    Display_printf(displayOut,0,0,"All data output");
+                    break;
+                case 3:
+                    Display_printf(displayOut,0,0,"Erase data");
+                    break;
+                case 4:
+                    Display_printf(displayOut,0,0,"Exit");
+                    break;
+                default:
+                    Display_printf(displayOut,0,0,"invalid output");
+                    break;
+                }
+                //end signal
+                sleep(1);
+                uint8_t data[20] = {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
+                enqueue(data);
+
+
+                /*if(Baseball6xsConfig != 0x11 && newValue == 0x11)
                 {
                     openflash();
                     SensorA301_Deactivate();
@@ -948,18 +972,8 @@ static void Baseball6xs_processCharChangeEvt(uint8_t paramID)
                     HwiP_enableInterrupt(40);
                     MAP_ADC14_enableConversion();
                     SensorA301_Activate(false);
-                }
-                else if(Baseball6xsConfig != 0x13 && newValue == 0x13)
-                {
-                    //outputflashdata();
-                }
-               /*
-                else if(Baseball6xsConfig == 0x10 && newValue == 0xFF)
-                {
-                    outputflashdata();
-                }
-                */
-            //    Baseball6xsConfig = newValue;
+                }*/
+
             }
         } else
         {

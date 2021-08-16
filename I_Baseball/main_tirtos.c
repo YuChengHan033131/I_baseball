@@ -82,17 +82,17 @@ void main()
     }
 
     flash_createTask();
-    //BLEsend_createTask();
-    //ForceSensor_createTask();
+    BLEsend_createTask();
+    ForceSensor_createTask();
     //SensorBMP280_createTask();
     //SensorBHI160_createTask();
     //SensorBMA253_createTask();
     //SensorICM20649_createTask();
-    test_SensorICM20649_createTask();
+    //test_SensorICM20649_createTask();
 
     //test_createTask();
 
-    //AP_createTask();
+    AP_createTask();
 
     /* Enable interrupts and start SYS/BIOS */
     BIOS_start();

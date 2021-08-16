@@ -54,29 +54,26 @@ void test_createTask(void)
 
 }
 static void* testFxn(void *arg0){
-
-    //sem_wait(&BLEinitDone);
-    //sem_wait(&BLEconnected);
     Display_printf(displayOut,0,0,"start");
-    flasheraseall();
-    openflash();
-    closeflash();
-    Display_printf(displayOut,0,0,"close");
-    /*Display_clear(displayOut);
+    sem_wait(&BLEinitDone);
+    //sem_wait(&BLEconnected);
+    Display_printf(displayOut,0,0,"connected");
+    sleep(1);
+
     uint16_t i;
     uint8_t data[20] = {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
-    for(i=0;i<10000;i=i+1){
-        data[(i*2)%20]=(uint8_t)(i>>8);
-        data[(i*2)%20+1]=(uint8_t)i;
-        if((i*2)%20+1 == 19){
-            sendtoStore(data);
-        }
-
+    for(i=0;i<50;i=i+1){
+        data[0]=(uint8_t)i;
         Display_printf(displayOut,0,0,"in:%d",i);
+        enqueue(data);
+        sleep(1);
     }
-    outputflashdata();
-    Display_printf(displayOut,0,0,"end");
-    Display_close(displayOut);*/
+    data[0]=(uint8_t)0xff;
+    Display_printf(displayOut,0,0,"in:%d",data[0]);
+    enqueue(data);
+
+    //Display_printf(displayOut,0,0,"end");
+    //Display_close(displayOut);
 
     return ;
 }
