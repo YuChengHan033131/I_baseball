@@ -905,21 +905,29 @@ static void Baseball6xs_processCharChangeEvt(uint8_t paramID)
 {
     uint8_t newValue;
     //uint32_t sendCmd;
-
+    uint16_t num,i;
     switch (paramID)
     {
     case BASEBALL6xs_CONF:
         if (Baseball6xsConfig != SENSORBSP_ERROR_DATA)
         {
             Baseball6xs_getParameter(BASEBALL6xs_CONF, &newValue);
+            sleep(1);//in case of data lost
             switch(newValue){
             case 1:
                 Display_printf(displayOut,0,0,"Choose data output");
                 break;
             case 2:
                 Display_printf(displayOut,0,0,"All data output");
+                num=total_set_number();
+                Display_printf(displayOut,0,0,"total set number=%d",num);
+                for(i=0;i<num;i++){
+                    outputflashdata(i);
+                }
+                Display_printf(displayOut,0,0,"All data output done");
                 break;
             case 3:
+                flasheraseall();
                 Display_printf(displayOut,0,0,"Erase data done");
                 break;
             case 4:

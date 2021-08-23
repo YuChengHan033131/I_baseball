@@ -88,7 +88,7 @@ void main()
     //SensorBHI160_createTask();
     //SensorBMA253_createTask();
     //SensorICM20649_createTask();
-    //test_SensorICM20649_createTask();
+    test_SensorICM20649_createTask();
 
     //test_createTask();
 

@@ -450,7 +450,7 @@ static void icm20649Callback(uint_least8_t index)
      writeReg(REG_BANK_SEL, BANK_2);
      writeReg(ACCEL_WOM_THR, 0x04);//LSB=4mg ,range=0~1020mg, i.e. 16mg
 
-     flasheraseall();//for testing only
+     //flasheraseall();//for testing only
 
      while(1){
          //enable wake-on motion interrupt
@@ -590,8 +590,8 @@ static void icm20649Callback(uint_least8_t index)
          //sem_wait(&BLEinitDone);
          //sem_wait(&BLEconnected);
          //send all of the flash data through BLE
-         outputflashdata((total_set_number()-1));//test, actually should be in AP_task
-         Display_printf(displayOut,0,0,"done data output");
+         //outputflashdata((total_set_number()-1));//test, actually should be in AP_task
+         //Display_printf(displayOut,0,0,"done data output");
      }
 
      Display_printf(displayOut,0,0,"end");

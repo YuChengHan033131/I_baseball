@@ -13,6 +13,7 @@
 
 #include "MT29Flash.h"
 #include "../Board.h"
+#include "BLEsend.h"
 
 #define ADDRESS_2_BLOCK(Address)    ((uint16_t) (Address >> 18))
 #define ADDRESS_2_PAGE(Address)     ((uint8_t)  ((Address >> 12) & 0x3F))
@@ -710,9 +711,13 @@ bool output_flash_data(SPI_Handle handle, uint16_t set_number){
                       (uint32_t) page0[set_number*3+4-1]+1;//previous end address +1
     }
 
+    Display_printf(displayOut,0,0,"readdress:%d-%d",readaddress,readaddress_end);
+
     //output data in those pages
     uint8_t sendData[DATA_LEN];
     while(FLASH_read(handle, sendData,DATA_LEN)){
+        enqueue(sendData);
+        usleep(10000);
         Display_printf(displayOut,0,0,"out:%d",sendData[12]*256+sendData[13]);
         Display_printf(displayOut,0,0,"accx:%d",sendData[0]*256+sendData[1]);
         Display_printf(displayOut,0,0,"accy:%d",sendData[2]*256+sendData[3]);
