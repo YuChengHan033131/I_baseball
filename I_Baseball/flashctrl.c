@@ -271,8 +271,8 @@ static void getdata(uint8_t *result)
  *
  * @description ¡G read flash page0 to check the starting and ending page of data, then output
  *
- * @caution : should't be called while writing data to flash(i.e. between openflash(), closeflash())
- *            should be called after flash initialize.
+ * @caution : should't be called while writing data to flash(i.e. between openflash() and
+ *  closeflash())should be called after flash initialize.
  *
  * */
 bool outputflashdata(uint16_t set_number)

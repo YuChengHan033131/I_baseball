@@ -537,7 +537,7 @@ static void icm20649Callback(uint_least8_t index)
                 //Display_printf(displayOut,0,0,"in:%d",sensordata[14]*256+sensordata[15]);//adding this will cause FIFO overflow
 
                 /*end data collection if no motion for 10 second
-                 * algorithm: differnce between previous sensordata < threshold*/
+                 * algorithm: difference between previous sensordata < threshold*/
                 smaller = true;
                 for(i=0;i<3;i++){
                     //turn sensordata from uint8_t*2 to int16_t
