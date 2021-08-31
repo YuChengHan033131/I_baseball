@@ -90,6 +90,8 @@ static bool div_en = false;
 /*TimeStamp*/
 xdc_runtime_Types_FreqHz freq;
 
+extern bool BLEisConnected;
+
 
 /*******************************************************************************
  *                                  LOCAL FUNCTIONS
@@ -450,7 +452,7 @@ static void icm20649Callback(uint_least8_t index)
      writeReg(REG_BANK_SEL, BANK_2);
      writeReg(ACCEL_WOM_THR, 0x04);//LSB=4mg ,range=0~1020mg, i.e. 16mg
 
-     //flasheraseall();//for testing only
+     flasheraseall();//for testing only
 
      while(1){
          //enable wake-on motion interrupt
@@ -467,9 +469,16 @@ static void icm20649Callback(uint_least8_t index)
          data |= 0x20;
          writeReg(PWR_MGMT_1, data);
 
-         Display_printf(displayOut,0,0,"sleeping");
-         sem_wait(&icm20649Sem);//wait for wake-on motion interrupt
-         Display_printf(displayOut,0,0,"wake up");
+         do{
+             Display_printf(displayOut,0,0,"sleeping");
+             sem_wait(&icm20649Sem);//wait for wake-on motion interrupt
+             Display_printf(displayOut,0,0,"wake up");
+             /*reset value in semaphore*///since may have multiple WOM interrupt
+              sem_getvalue(&icm20649Sem,&data);
+              for(i=0;i<data;i++){
+                  sem_wait(&icm20649Sem);
+              }
+         }while(BLEisConnected);//back to sleeping state if BLE is connected
 
          //test: see interrupt status
          /*writeReg(REG_BANK_SEL, BANK_0);

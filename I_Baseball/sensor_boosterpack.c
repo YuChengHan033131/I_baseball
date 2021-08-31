@@ -156,6 +156,8 @@ volatile bool Baseball3xs = false;
 
 volatile bool store_en = false;
 
+bool BLEisConnected;
+
 /*******************************************************************************
  *                            FUNCTION PROTOTYPES
  ******************************************************************************/
@@ -514,6 +516,9 @@ static void *AP_taskFxn(void *arg0)
             Display_print1(displayOut,0,0,"Peer connected! (%s)", peerstr);
 #endif
 
+            //lock ICM20649 thread and flash thread
+            BLEisConnected=true;
+
             /* Events that can happen during connection - Client Disconnection
                                                         - AP Disconnection */
             do
@@ -532,6 +537,9 @@ static void *AP_taskFxn(void *arg0)
                 }
             }
             while (apEvent != AP_EVT_CONN_TERM);
+
+            //unlock ICM20649 thread and flash thread
+            BLEisConnected=false;
 
             /* Client has disconnected from server */
             SAP_setParam(SAP_PARAM_CONN, SAP_CONN_STATE, sizeof(connHandle),
@@ -906,6 +914,7 @@ static void Baseball6xs_processCharChangeEvt(uint8_t paramID)
     uint8_t newValue;
     //uint32_t sendCmd;
     uint16_t num,i;
+
     switch (paramID)
     {
     case BASEBALL6xs_CONF:
@@ -953,6 +962,7 @@ static void Baseball6xs_processCharChangeEvt(uint8_t paramID)
     default:
         break;
     }
+
 }
 static void initBaseball6xsCharacteristicValue(uint8_t paramID, uint8_t value, uint8_t paramLen)
 {
