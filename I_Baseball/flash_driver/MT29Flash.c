@@ -630,7 +630,7 @@ bool get_writeaddress(SPI_Handle handle){
             if(i==4){//no record writeaddress in flash
                 writeaddress = 1;
             }else{
-                writeaddress = (uint_fast32_t)page0[i-3]>>16 | (uint_fast32_t)page0[i-2]>>8 | (uint_fast32_t)page0[i-1];
+                writeaddress = (uint_fast32_t)page0[i-3]<<16 | (uint_fast32_t)page0[i-2]<<8 | (uint_fast32_t)page0[i-1];
                 writeaddress+=1;
             }
             break;
