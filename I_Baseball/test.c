@@ -55,8 +55,16 @@ void test_createTask(void)
 }
 static void* testFxn(void *arg0){
     Display_printf(displayOut,0,0,"start");
-    flasheraseall();
-    Display_printf(displayOut,0,0,"erase flash");
+    uint16_t i;
+    uint8_t data[20] = {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
+
+    for(i=0;i<1000;i++){
+        data[12]=(uint8_t)(i>>8);
+        data[13]=(uint8_t)(i);
+        enqueue(data);
+        Display_printf(displayOut,0,0,"in=%d",i);
+        //usleep(10000);
+    }
 
     //Display_printf(displayOut,0,0,"end");
     //Display_close(displayOut);

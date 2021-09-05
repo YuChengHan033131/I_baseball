@@ -516,11 +516,13 @@ static void *AP_taskFxn(void *arg0)
             Display_print1(displayOut,0,0,"Peer connected! (%s)", peerstr);
 #endif
 
+            sem_post(&BLEconnected);
             //lock ICM20649 thread and flash thread
             BLEisConnected=true;
 
             /* Events that can happen during connection - Client Disconnection
                                                         - AP Disconnection */
+            Display_printf(displayOut, 0, 0,"BLE connected");
             do
             {
                 apEvent = 0;
@@ -537,7 +539,7 @@ static void *AP_taskFxn(void *arg0)
                 }
             }
             while (apEvent != AP_EVT_CONN_TERM);
-
+            Display_printf(displayOut, 0, 0,"BLE terminate");
             //unlock ICM20649 thread and flash thread
             BLEisConnected=false;
 
@@ -931,17 +933,28 @@ static void Baseball6xs_processCharChangeEvt(uint8_t paramID)
                 num=total_set_number();
                 Display_printf(displayOut,0,0,"total set number=%d",num);
                 for(i=0;i<num;i++){
-                    outputflashdata(i);
+                    //outputflashdata(i);//open until flash fixed
                 }
                 Display_printf(displayOut,0,0,"All data output done");
                 break;
             case 3:
-                flasheraseall();
+                //flasheraseall();//open until flash fixed
                 Display_printf(displayOut,0,0,"Erase data done");
                 break;
             case 4:
                 Display_printf(displayOut,0,0,"Exit");
                 break;
+            case 5:
+                Display_printf(displayOut,0,0,"data output test");
+                static uint8_t data[20] = {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
+                for(i=0;i<1000;i++){
+                    data[12]=(uint8_t)(i>>8);
+                    data[13]=(uint8_t)(i);
+                    Display_printf(displayOut,0,0,"in:%d",data[12]*256+data[13]);
+                    enqueue(data);
+                }
+                break;
+
             default:
                 Display_printf(displayOut,0,0,"invalid output");
                 break;
@@ -1079,7 +1092,7 @@ static void ALL_Sensor_Disable(void)
     //SensorBMP280_Deactivate();
     //SensorBMA253_Deactivate();
     //SensorBHI160_Deactivate();
-    SensorA301_Deactivate();
+    //SensorA301_Deactivate();
     Timer_stop(timer0);
     HwiP_disableInterrupt(40);
     MAP_ADC14_disableConversion();
