@@ -67,6 +67,7 @@
 #include "BLEsend.h"
 
 extern sem_t BLEconnected;
+extern sem_t writeCallback;
 /*******************************************************************************
  *                             VARIABLES
  ******************************************************************************/
@@ -913,7 +914,6 @@ static void AP_processBaseball6xscccdCB(uint8_t charID, uint16_t value)
 
 static void Baseball6xs_processCharChangeEvt(uint8_t paramID)
 {
-    uint8_t newValue;
     //uint32_t sendCmd;
     uint16_t num,i;
 
@@ -922,47 +922,7 @@ static void Baseball6xs_processCharChangeEvt(uint8_t paramID)
     case BASEBALL6xs_CONF:
         if (Baseball6xsConfig != SENSORBSP_ERROR_DATA)
         {
-            Baseball6xs_getParameter(BASEBALL6xs_CONF, &newValue);
-            sleep(1);//in case of data lost
-            switch(newValue){
-            case 1:
-                Display_printf(displayOut,0,0,"Choose data output");
-                break;
-            case 2:
-                Display_printf(displayOut,0,0,"All data output");
-                num=total_set_number();
-                Display_printf(displayOut,0,0,"total set number=%d",num);
-                for(i=0;i<num;i++){
-                    //outputflashdata(i);//open until flash fixed
-                }
-                Display_printf(displayOut,0,0,"All data output done");
-                break;
-            case 3:
-                //flasheraseall();//open until flash fixed
-                Display_printf(displayOut,0,0,"Erase data done");
-                break;
-            case 4:
-                Display_printf(displayOut,0,0,"Exit");
-                break;
-            case 5:
-                Display_printf(displayOut,0,0,"data output test");
-                static uint8_t data[20] = {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
-                for(i=0;i<1000;i++){
-                    data[12]=(uint8_t)(i>>8);
-                    data[13]=(uint8_t)(i);
-                    Display_printf(displayOut,0,0,"in:%d",data[12]*256+data[13]);
-                    enqueue(data);
-                }
-                break;
-
-            default:
-                Display_printf(displayOut,0,0,"invalid output");
-                break;
-            }
-            //end signal
-            sleep(1);
-            uint8_t data[20] = {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
-            enqueue(data);
+            sem_post(&writeCallback);
 
         } else
         {

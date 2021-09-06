@@ -7,6 +7,7 @@
 #include <ti/display/Display.h>// for display_print through serial port
 #include <semaphore.h>
 #include "flashctrl.h"
+#include <Profile/baseball6xs_service.h>
 
 
 
@@ -14,6 +15,7 @@ static pthread_t sensorTask;
 extern Display_Handle displayOut;
 extern sem_t BLEconnected;
 extern sem_t BLEinitDone;
+extern sem_t writeCallback;
 
 
 void test_createTask(void)
@@ -58,13 +60,6 @@ static void* testFxn(void *arg0){
     uint16_t i;
     uint8_t data[20] = {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
 
-    for(i=0;i<1000;i++){
-        data[12]=(uint8_t)(i>>8);
-        data[13]=(uint8_t)(i);
-        enqueue(data);
-        Display_printf(displayOut,0,0,"in=%d",i);
-        //usleep(10000);
-    }
 
     //Display_printf(displayOut,0,0,"end");
     //Display_close(displayOut);

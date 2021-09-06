@@ -50,13 +50,15 @@
 #include "sensor_boosterpack_icm20649.h"
 #include "sensor_boosterpack.h"
 #include "sensor_configuration.h"
+#include "test.h"
+#include "GATTwriteHandler.h"
 
 /* Output display handle that will be used to print out all debug/log
  * statements
  */
 Display_Handle displayOut;
 
-#include "test.h"
+
 
 
 sem_t BLEinitDone;
@@ -89,8 +91,9 @@ void main()
     //SensorBMA253_createTask();
     //SensorICM20649_createTask();
     //test_SensorICM20649_createTask();
+    GATTwriteHandler_createTask();
 
-    test_createTask();
+    //test_createTask();
 
     AP_createTask();
 
