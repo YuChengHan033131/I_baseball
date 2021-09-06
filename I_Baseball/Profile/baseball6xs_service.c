@@ -40,6 +40,8 @@
 #include <ti/sap/snp_rpc_synchro.h>
 #include <ti/sap/sap.h>
 #include "profile_util.h"
+#include <ti/display/Display.h>
+extern Display_Handle displayOut;
 
 /*******************************************************************************
  *                                   MACROS
