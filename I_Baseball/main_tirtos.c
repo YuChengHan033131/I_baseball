@@ -59,9 +59,6 @@
 Display_Handle displayOut;
 
 
-
-
-sem_t BLEconnected;
 void main()
 {
     /* Call board initialization functions */
@@ -71,8 +68,6 @@ void main()
     Timer_init();
     I2C_init();
     SPI_init();
-
-    sem_init(&BLEconnected,1,0);
 
     /*display through UART*/
     displayOut = Display_open(Display_Type_UART, NULL);

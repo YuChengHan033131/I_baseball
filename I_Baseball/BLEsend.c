@@ -49,7 +49,7 @@
 #include "Board.h"
 #include "sensor_configuration.h"
 
-extern sem_t BLEconnected;
+sem_t BLEconnected;
 /*******************************************************************************
  *                             LOCAL VARIABLES
  ******************************************************************************/
@@ -123,6 +123,7 @@ void BLEsend_createTask(void)
     // Initializing the semaphore
     sem_init(&spacesem,0,NUM);
     sem_init(&countsem,0,0);
+    sem_init(&BLEconnected,1,0);//allow other thread , initial value =0
 
 }
 
