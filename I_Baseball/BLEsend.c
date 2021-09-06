@@ -49,7 +49,6 @@
 #include "Board.h"
 #include "sensor_configuration.h"
 
-extern sem_t BLEinitDone;
 extern sem_t BLEconnected;
 /*******************************************************************************
  *                             LOCAL VARIABLES

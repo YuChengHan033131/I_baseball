@@ -61,7 +61,6 @@
  ******************************************************************************/
 /* GLOBAL variable*/
 extern sem_t BLEconnected;
-extern sem_t BLEinitDone;
 /* Task setup */
 pthread_t icm20649Task;
 pthread_t icmSensorTask;
@@ -596,7 +595,6 @@ static void icm20649Callback(uint_least8_t index)
          writeReg(REG_BANK_SEL, BANK_0);
          writeReg(FIFO_EN_2, 0x00);//acc & gyr
 
-         //sem_wait(&BLEinitDone);
          //sem_wait(&BLEconnected);
          //send all of the flash data through BLE
          //outputflashdata((total_set_number()-1));//test, actually should be in AP_task

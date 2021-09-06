@@ -14,7 +14,6 @@
 static pthread_t sensorTask;
 extern Display_Handle displayOut;
 extern sem_t BLEconnected;
-extern sem_t BLEinitDone;
 extern sem_t writeCallback;
 
 
