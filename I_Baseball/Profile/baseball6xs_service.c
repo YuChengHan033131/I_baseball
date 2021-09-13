@@ -152,7 +152,7 @@ static SAP_Char_t sensorAttrTable[BASEBALL_NUM_ATTR_SUPPORTED] =
     /* Characteristic Value "Data" */
     {
         { SNP_128BIT_UUID_SIZE, sensorDataUUID }, /* UUID */
-        SNP_GATT_PROP_NOTIFICATION, 0,            /* Properties */
+        SNP_GATT_PROP_NOTIFICATION|SNP_GATT_PROP_INDICATION, 0,            /* Properties */
         &sensorDataUserDesc,                      /* User Description */
         &sensorDataCCCD                           /* CCCD */
     },

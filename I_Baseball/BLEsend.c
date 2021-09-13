@@ -178,9 +178,9 @@ static void *BLEsendTaskFxn(void *arg0)
         }
         */
         //Baseball3xs_setParameter(BASEBALL3xs_DATA, BASEBALL3xs_DATA_LEN, sendData);
+        //Display_printf(displayOut,0,0,"BLE sendData:%d",sendData[12]*256+sendData[13]);
         Baseball6xs_setParameter(BASEBALL6xs_DATA, BASEBALL6xs_DATA_LEN, sendData);
-        //Display_printf(displayOut, 0, 0,"sendData=%d",sendData[0]);
-        usleep(10000);//sleep 5.25ms
+        //usleep(5250);//sleep 5.25ms
 
 /*
         if(ret)

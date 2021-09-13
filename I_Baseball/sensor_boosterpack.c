@@ -697,9 +697,17 @@ static void AP_processSNPEventCB(uint16_t event, snpEventParam_t *param)
         connHandle = connEstEvt->connHandle;
         ProfileUtil_convertBdAddr2Str(&peerstr[peerstrIDX], connEstEvt->pAddr);
 
+        /*display connection parameter*/
+        Display_printf(displayOut,0,0,"connInterval:0x%x",connEstEvt->connInterval);
+        Display_printf(displayOut,0,0,"slaveLatency:0x%x",connEstEvt->slaveLatency);
+        Display_printf(displayOut,0,0,"supervisionTimeout");
+
+
         /* Notify state machine of established connection */
         eventPend = AP_EVT_CONN_EST;
         mq_send(sensQueueSend, (void*)&eventPend, sizeof(uint32_t), 1);
+
+
     }
         break;
 
@@ -740,8 +748,23 @@ static void AP_processSNPEventCB(uint16_t event, snpEventParam_t *param)
         }
     }
         break;
+    case SNP_ATT_MTU_EVT:
+    {
+        snpATTMTUSizeEvt_t *Evt = (snpATTMTUSizeEvt_t*) param;
+        Display_printf(displayOut,0,0,"SNP ATT MTU size:0x%x",Evt->attMtuSize);
+    }
+        break;
+
+    case SNP_ERROR_EVT:
+    {
+        snpErrorEvt_t *Evt = (snpErrorEvt_t *) param;
+        Display_printf(displayOut,0,0,"SNP error status:0x%x,code:0x%x",Evt->status,Evt->opcode);
+
+    }
+        break;
 
     default:
+        Display_printf(displayOut,0,0,"unknown event");
         break;
     }
 }
