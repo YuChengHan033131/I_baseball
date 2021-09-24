@@ -59,7 +59,7 @@ extern "C"
 #define BASEBALL6xs_PERI_UUID       0xAA83
 
 /* Length of sensor data in bytes */
-#define BASEBALL6xs_DATA_LEN        20
+#define BASEBALL6xs_DATA_LEN        200
 
 /* Data readout periods (range 100 - 2550 ms) */
 #define BASEBALL6xs_MIN_UPDATE_PERIOD 100

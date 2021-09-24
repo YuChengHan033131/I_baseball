@@ -57,8 +57,12 @@ void GATTwriteHandler_createTask(void)
 }
 static void* handlerFxn(void *arg0){
     uint16_t i;
-    uint8_t data[20] = {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
-    const uint8_t endsignal[20] = {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
+    uint8_t data[DATA_LEN];
+    uint8_t endsignal[DATA_LEN];
+    for(i=0;i<DATA_LEN;i++){
+        endsignal[i]=0xff;
+        data[i]=0xff;
+    }
     uint8_t command;
     sem_init(&writeCallback,1,0);//allow other thread , initial value =0
     while(1){
@@ -88,7 +92,7 @@ static void* handlerFxn(void *arg0){
                  break;
              case 5:
                  Display_printf(displayOut,0,0,"test data output");
-                 for(i=0;i<1000;i++){
+                 for(i=0;i<100;i++){
                      data[12]=(uint8_t)(i>>8);
                      data[13]=(uint8_t)(i);
                      enqueue(data);
@@ -100,7 +104,10 @@ static void* handlerFxn(void *arg0){
                  Display_printf(displayOut,0,0,"invalid output");
                 break;
         }
-        enqueue(endsignal);
+        for(i=0;i<10;i++){//temp need to read BLE.c to know buffer status, to decide endsignal amount
+            enqueue(endsignal);
+        }
+
 
     }
 

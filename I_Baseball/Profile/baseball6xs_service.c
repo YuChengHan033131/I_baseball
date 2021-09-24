@@ -94,10 +94,7 @@ static UUIDType_t sensorService =
 };
 
 /* Characteristic Value: data */
-static uint8_t sensorData[BASEBALL6xs_DATA_LEN] =
-{
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-};
+static uint8_t sensorData[BASEBALL6xs_DATA_LEN];
 
 /* Characteristic Value: configuration */
 static uint8_t sensorCfg = 0;

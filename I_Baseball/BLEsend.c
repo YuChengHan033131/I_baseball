@@ -137,7 +137,10 @@ void ringbuffer_init(void)
 static void *BLEsendTaskFxn(void *arg0)
 {
     //uint8_t ret = 0;
-    uint8_t sendData[20];
+    uint8_t dequeueData[20];
+    uint8_t sendData[200];
+
+    uint8_t i=0;
 
     // Initialize the task
     ringbuffer_init();
@@ -145,50 +148,15 @@ static void *BLEsendTaskFxn(void *arg0)
     usleep(220000);
     while (1)
     {
-        dequeue(sendData);
-        //ret = 0;
-/*
-#ifdef debug
-
-        //Display_printf(displayOut, 0, 0, "%02x%02x%02x%02x",
-        //               sendData[0],sendData[1],sendData[2],sendData[3]);
-
-        Display_printf(displayOut, 0, 0, "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
-                       sendData[0],sendData[1],sendData[2],sendData[3],sendData[4],sendData[5],sendData[6],sendData[7],sendData[8],sendData[9],
-                       sendData[10],sendData[11],sendData[12],sendData[13],sendData[14],sendData[15],sendData[16],sendData[17],sendData[18],sendData[19]);
-#endif
-*/
-
-#ifdef debug
-        //this should be closed when using, or it will cause surge output signal
-        getTime();
-#endif
-
-     //sendagain:
-        /*
-        if(Baseball3xs)
-        {
-            Baseball3xs_setParameter(BASEBALL3xs_DATA, BASEBALL3xs_DATA_LEN, sendData);
-            usleep(5100);//sleep 5.1ms
-        }
-        else if(Baseball6xs)
-        {
+        dequeue(dequeueData);
+        Display_printf(displayOut,0,0,"dequeue data:%d",dequeueData[12]*256+dequeueData[13]);
+        memcpy(&sendData[i*20],dequeueData,DATA_LEN);
+        i++;
+        if(i==10){
             Baseball6xs_setParameter(BASEBALL6xs_DATA, BASEBALL6xs_DATA_LEN, sendData);
-            usleep(5100);//sleep 5.1ms
+            usleep(22001);
+            i=0;
         }
-        */
-        //Baseball3xs_setParameter(BASEBALL3xs_DATA, BASEBALL3xs_DATA_LEN, sendData);
-        //Display_printf(displayOut,0,0,"BLE sendData:%d",sendData[12]*256+sendData[13]);
-        Baseball6xs_setParameter(BASEBALL6xs_DATA, BASEBALL6xs_DATA_LEN, sendData);
-        usleep(4001);
-
-/*
-        if(ret)
-        {
-            Display_printf(displayOut, 0, 0, "notify error !!");
-            goto sendagain;
-        }
-*/
     }
 }
 
