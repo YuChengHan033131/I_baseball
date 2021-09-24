@@ -76,6 +76,7 @@ static uint16_t in  = 0;
 static uint16_t out = 0;
 //static uint16_t waitting = 0;
 //static volatile bool post = false;
+uint8_t ENDSIGNAL[DATA_LEN]={0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
 /*******************************************************************************
  *                                  LOCAL FUNCTIONS
  ******************************************************************************/
@@ -140,7 +141,7 @@ static void *BLEsendTaskFxn(void *arg0)
     uint8_t dequeueData[20];
     uint8_t sendData[200];
 
-    uint8_t i=0;
+    uint8_t i=0,j=0;
 
     // Initialize the task
     ringbuffer_init();
@@ -149,14 +150,21 @@ static void *BLEsendTaskFxn(void *arg0)
     while (1)
     {
         dequeue(dequeueData);
-        Display_printf(displayOut,0,0,"dequeue data:%d",dequeueData[12]*256+dequeueData[13]);
         memcpy(&sendData[i*20],dequeueData,DATA_LEN);
         i++;
-        if(i==10){
+        bool end=true;
+        for(j=0;j<20;j++){
+            if(dequeueData[j]!=ENDSIGNAL[j]){
+                end=false;
+                break;
+            }
+        }
+        if(i==10||end==true){
             Baseball6xs_setParameter(BASEBALL6xs_DATA, BASEBALL6xs_DATA_LEN, sendData);
             usleep(22001);
             i=0;
         }
+
     }
 }
 

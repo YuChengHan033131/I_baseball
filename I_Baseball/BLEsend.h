@@ -47,6 +47,9 @@ extern "C"
 //buffer configuration
 #define NUM      64 //2^x, ex. 16, 32, 64
 #define DATA_LEN 20
+
+//ending signal for sending data
+extern uint8_t ENDSIGNAL[DATA_LEN];
 /*******************************************************************************
  *                                FUNCTIONS
  ******************************************************************************/

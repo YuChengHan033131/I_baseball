@@ -17,7 +17,6 @@ extern sem_t BLEinitDone;
 sem_t writeCallback;//write callback thread
 
 static void* handlerFxn(void *arg0);
-
 void GATTwriteHandler_createTask(void)
 {
     //mpdify from void ForceSensor_createTask(void)
@@ -58,9 +57,7 @@ void GATTwriteHandler_createTask(void)
 static void* handlerFxn(void *arg0){
     uint16_t i;
     uint8_t data[DATA_LEN];
-    uint8_t endsignal[DATA_LEN];
     for(i=0;i<DATA_LEN;i++){
-        endsignal[i]=0xff;
         data[i]=0xff;
     }
     uint8_t command;
@@ -104,11 +101,7 @@ static void* handlerFxn(void *arg0){
                  Display_printf(displayOut,0,0,"invalid output");
                 break;
         }
-        for(i=0;i<10;i++){//temp need to read BLE.c to know buffer status, to decide endsignal amount
-            enqueue(endsignal);
-        }
-
-
+        enqueue(ENDSIGNAL);
     }
 
     //Display_printf(displayOut,0,0,"end");
