@@ -451,8 +451,6 @@ static void icm20649Callback(uint_least8_t index)
      writeReg(REG_BANK_SEL, BANK_2);
      writeReg(ACCEL_WOM_THR, 0x04);//LSB=4mg ,range=0~1020mg, i.e. 16mg
 
-     flasheraseall();//for testing only
-
      while(1){
          //enable wake-on motion interrupt
          writeReg(REG_BANK_SEL, BANK_0);

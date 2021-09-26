@@ -71,17 +71,16 @@ static void* handlerFxn(void *arg0){
                  break;
              case 2:
                  Display_printf(displayOut,0,0,"All data output");
-                 //open until flash fixed
-                 /*num=total_set_number();
+                 uint16_t num;
+                 num=total_set_number();
                  Display_printf(displayOut,0,0,"total set number=%d",num);
                  for(i=0;i<num;i++){
                      outputflashdata(i);
                  }
-                 Display_printf(displayOut,0,0,"All data output done");*/
+                 Display_printf(displayOut,0,0,"All data output done");
                  break;
              case 3:
-                 //open until flash fixed
-                 //flasheraseall();
+                 flasheraseall();
                  Display_printf(displayOut,0,0,"Erase data done");
                  break;
              case 4:

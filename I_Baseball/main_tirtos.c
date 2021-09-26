@@ -77,14 +77,14 @@ void main()
         //while (1);
     }
 
-    //flash_createTask();
+    flash_createTask();
     BLEsend_createTask();
     //ForceSensor_createTask();
     //SensorBMP280_createTask();
     //SensorBHI160_createTask();
     //SensorBMA253_createTask();
     //SensorICM20649_createTask();
-    //test_SensorICM20649_createTask();
+    test_SensorICM20649_createTask();
     GATTwriteHandler_createTask();
 
     //test_createTask();

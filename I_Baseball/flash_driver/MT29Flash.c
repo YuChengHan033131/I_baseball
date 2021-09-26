@@ -693,8 +693,8 @@ bool output_flash_data(SPI_Handle handle, uint16_t set_number){
     FlashPageRead(handle, 0, page0);
 
     //get end address of data by set_number
-    readaddress_end = (uint32_t)(page0[set_number*3+4  ]>>16) |
-                      (uint32_t)(page0[set_number*3+4+1]>>8) |
+    readaddress_end = (uint32_t)(page0[set_number*3+4  ]<<16) |
+                      (uint32_t)(page0[set_number*3+4+1]<<8) |
                       (uint32_t) page0[set_number*3+4+2];
 
     //check if set_number is valid
@@ -706,22 +706,23 @@ bool output_flash_data(SPI_Handle handle, uint16_t set_number){
     if(set_number == 0){
         readaddress = 1;
     }else{
-        readaddress = (uint32_t)(page0[set_number*3+4-3]>>16) |
-                      (uint32_t)(page0[set_number*3+4-2]>>8) |
-                      (uint32_t) page0[set_number*3+4-1]+1;//previous end address +1
+        readaddress = (uint32_t)(page0[set_number*3+4-3]<<16) |
+                      (uint32_t)(page0[set_number*3+4-2]<<8) |
+                      (uint32_t) page0[set_number*3+4-1];
+        //previous end address +1
+        readaddress += 1;
     }
-
     Display_printf(displayOut,0,0,"readdress:%d-%d",readaddress,readaddress_end);
 
     //output data in those pages
     uint8_t sendData[DATA_LEN];
     while(FLASH_read(handle, sendData,DATA_LEN)){
         enqueue(sendData);
-        usleep(10000);
-        Display_printf(displayOut,0,0,"out:%d",sendData[12]*256+sendData[13]);
+        usleep(2200);
+        /*Display_printf(displayOut,0,0,"out:%d",sendData[12]*256+sendData[13]);
         Display_printf(displayOut,0,0,"accx:%d",sendData[0]*256+sendData[1]);
         Display_printf(displayOut,0,0,"accy:%d",sendData[2]*256+sendData[3]);
-        Display_printf(displayOut,0,0,"accz:%d",sendData[4]*256+sendData[5]);
+        Display_printf(displayOut,0,0,"accz:%d",sendData[4]*256+sendData[5]);*/
     }
 
 }
