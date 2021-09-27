@@ -413,7 +413,8 @@ static void icm20649Callback(uint_least8_t index)
 
      /*general variables*/
      static uint8_t sensordata[20] = {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
-     uint16_t i, j, seqNum=0;
+     uint16_t i, j;
+     uint8_t seqNum=0;
      uint8_t data;
 
      /*variable of sleep if no motion*/
@@ -540,9 +541,12 @@ static void icm20649Callback(uint_least8_t index)
                 //usleep(10000);
                 //enqueue(sensordata);
                 //add seqNum
-                sensordata[12]=(uint8_t)(seqNum>>8);
-                sensordata[13]=(uint8_t)seqNum;
-                seqNum+=1;
+                sensordata[12]=seqNum;
+                if(seqNum==255){
+                    seqNum=0;
+                }else{
+                    seqNum+=1;
+                }
                 sendtoStore(sensordata);
                 //Display_printf(displayOut,0,0,"in:%d",sensordata[14]*256+sensordata[15]);//adding this will cause FIFO overflow
 
