@@ -90,6 +90,7 @@ static bool div_en = false;
 xdc_runtime_Types_FreqHz freq;
 
 extern bool BLEisConnected;
+extern bool sensorOn;
 
 
 /*******************************************************************************
@@ -468,6 +469,9 @@ static void icm20649Callback(uint_least8_t index)
 
          do{
              Display_printf(displayOut,0,0,"sleeping");
+             if(!sensorOn){
+                 sleep(5);
+             }
              sem_wait(&icm20649Sem);//wait for wake-on motion interrupt
              Display_printf(displayOut,0,0,"wake up");
              /*reset value in semaphore*///since may have multiple WOM interrupt
@@ -475,7 +479,7 @@ static void icm20649Callback(uint_least8_t index)
               for(i=0;i<data;i++){
                   sem_wait(&icm20649Sem);
               }
-         }while(BLEisConnected);//back to sleeping state if BLE is connected
+         }while(!sensorOn);//back to sleeping state if sensor is turn off by BLE command
 
          //test: see interrupt status
          /*writeReg(REG_BANK_SEL, BANK_0);
@@ -570,8 +574,8 @@ static void icm20649Callback(uint_least8_t index)
                 }else{
                     cnt = 0;
                 }
-
-                if(cnt>1125/(1+sampleRateDivider)*5){//sample rate *5 second
+                //sample rate *5 second or sensor turn off by BLE command
+                if(cnt>1125/(1+sampleRateDivider)*5||!sensorOn){
                     sample = false;
                     Display_printf(displayOut,0,0,"sleep");
                     break;

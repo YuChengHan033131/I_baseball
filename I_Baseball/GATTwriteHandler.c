@@ -15,6 +15,7 @@ extern Display_Handle displayOut;
 extern sem_t BLEconnected;
 extern sem_t BLEinitDone;
 sem_t writeCallback;//write callback thread
+bool sensorOn = false;
 
 static void* handlerFxn(void *arg0);
 void GATTwriteHandler_createTask(void)
@@ -65,6 +66,7 @@ static void* handlerFxn(void *arg0){
     while(1){
         sem_wait(&writeCallback);
         Baseball6xs_getParameter(BASEBALL6xs_CONF, &command);
+
         switch(command){
              case 1:
                  Display_printf(displayOut,0,0,"Choose data output");
@@ -95,7 +97,23 @@ static void* handlerFxn(void *arg0){
                      //Display_printf(displayOut,0,0,"in=%d",i);
                  }
                  break;
-
+             case 6://get sensor state
+                 Display_printf(displayOut,0,0,"get sensor state");
+                 for(i=0;i<DATA_LEN;i++){
+                     data[i]=0xff;
+                 }
+                 //return sensor on or off
+                 data[0]=(uint8_t)sensorOn;
+                 enqueue(data);
+                 break;
+             case 10://sensor on
+                 sensorOn = true;
+                 Display_printf(displayOut,0,0,"sensor on");
+                 break;
+             case 11://sensor off
+                 sensorOn = false;
+                 Display_printf(displayOut,0,0,"sensor off");
+                 break;
              default:
                  Display_printf(displayOut,0,0,"invalid output");
                 break;
