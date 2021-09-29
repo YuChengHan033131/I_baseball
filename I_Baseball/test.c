@@ -3,11 +3,11 @@
 #include "BLEsend.h"
 #include <unistd.h>//for usleep
 #include <stdbool.h>//for bool in icm20649 activate
-#include "sensor_boosterpack_icm20649.h"
 #include <ti/display/Display.h>// for display_print through serial port
 #include <semaphore.h>
 #include "flashctrl.h"
 #include <Profile/baseball6xs_service.h>
+#include <sensor_boosterpack_icm20649_I2C.h>
 
 
 

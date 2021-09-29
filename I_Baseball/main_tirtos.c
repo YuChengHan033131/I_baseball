@@ -41,13 +41,13 @@
 #include <ti/drivers/I2C.h>
 #include <ti/drivers/SPI.h>
 #include <semaphore.h>
+#include <sensor_boosterpack_icm20649_I2C.h>
 #include "Board.h"
 #include "flashctrl.h"
 #include "BLEsend.h"
 #include "sensor_boosterpack_bhi160.h"
 #include "sensor_boosterpack_bma253.h"
 #include "sensor_boosterpack_bmp280.h"
-#include "sensor_boosterpack_icm20649.h"
 #include "sensor_boosterpack.h"
 #include "sensor_configuration.h"
 #include "test.h"

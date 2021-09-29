@@ -59,7 +59,7 @@
 #include "sensor_boosterpack_bhi160.h"
 #include "sensor_boosterpack_bmp280.h"
 #include "sensor_boosterpack_bma253.h"
-#include "sensor_boosterpack_icm20649.h"
+#include <sensor_boosterpack_icm20649_I2C.h>
 #include "sensor_boosterpack.h"
 #include "sensor_configuration.h"
 #include "Board.h"

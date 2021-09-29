@@ -44,7 +44,7 @@
 #include <ti/display/Display.h>
 #define DISPLAY_DISABLE
 #include <Profile/baseball6xs_service.h>
-#include <sensor_boosterpack_icm20649.h>
+#include <sensor_boosterpack_icm20649_I2C.h>
 #include <sensor_driver/icm20649_I2C.h>
 #include "flashctrl.h"
 #include "BLEsend.h"

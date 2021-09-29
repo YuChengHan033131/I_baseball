@@ -29,8 +29,8 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * --/COPYRIGHT--*/
-#ifndef SENSOR_BOOSTERPACK_ICM20649_H_
-#define SENSOR_BOOSTERPACK_ICM20649_H_
+#ifndef SENSOR_BOOSTERPACK_ICM20649_I2C_H_
+#define SENSOR_BOOSTERPACK_ICM20649_I2C_H_
 
 /*******************************************************************************
  *                                INCLUDES
@@ -86,4 +86,4 @@ extern void test_icm20649Setup (uint8_t sampleRateDivider);
 }
 #endif
 
-#endif /* SENSOR_BOOSTERPACK_ICM20649_H_ */
+#endif /* SENSOR_BOOSTERPACK_ICM20649_I2C_H_ */
