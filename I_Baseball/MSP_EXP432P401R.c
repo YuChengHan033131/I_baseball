@@ -329,9 +329,9 @@ GPIO_PinConfig gpioPinConfigs[] =
     /* MSP_EXP432P401R_LED_RED */ //P2_0
     GPIOMSP432_P2_0 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_HIGH | GPIO_CFG_OUT_LOW,
     /* MSP_EXP432P401R_LED_GREEN */
-    GPIOMSP432_P2_1 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_HIGH | GPIO_CFG_OUT_LOW,
+ //   GPIOMSP432_P2_1 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_HIGH | GPIO_CFG_OUT_LOW,
     /* MSP_EXP432P401R_LED_BLUE */
-    GPIOMSP432_P2_2 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_HIGH | GPIO_CFG_OUT_LOW,
+ //   GPIOMSP432_P2_2 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_HIGH | GPIO_CFG_OUT_LOW,
 
     /* MSP_EXP432P401R_RESET_N */
     GPIOMSP432_P2_7 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_HIGH | GPIO_CFG_OUT_HIGH,
@@ -340,19 +340,24 @@ GPIO_PinConfig gpioPinConfigs[] =
 
     //LTC2954
     //MSP_EXP432P401R_LTC2954_nINT
-    GPIOMSP432_P8_2 | GPIO_CFG_IN_PU,
+  //  GPIOMSP432_P6_6 | GPIO_CFG_IN_PU,
     //MSP_EXP432P401R_LTC2954_nKILL
-    GPIOMSP432_P8_3 | GPIO_CFG_IN_PU,
+  //  GPIOMSP432_P6_7 | GPIO_CFG_IN_PU,
 
     //MSP_EXP432P401R_INT1 pos-edge
     GPIOMSP432_P3_6 | GPIO_CFG_IN_PD | GPIO_CFG_IN_INT_RISING,//GPIO_CFG_IN_INT_RISING GPIO_CFG_IN_INT_FALLING
     //MSP_EXP432P401R_INT2 pos-edge
-    GPIOMSP432_P4_0 | GPIO_CFG_IN_PD | GPIO_CFG_IN_INT_RISING,//GPIO_CFG_IN_INT_RISING GPIO_CFG_IN_INT_FALLING
+    GPIOMSP432_P7_0 | GPIO_CFG_IN_PD | GPIO_CFG_IN_INT_RISING,//GPIO_CFG_IN_INT_RISING GPIO_CFG_IN_INT_FALLING
     //MSP_EXP432P401R_INT3 pos-edge
+    GPIOMSP432_P6_0 | GPIO_CFG_IN_PD | GPIO_CFG_IN_INT_RISING,//GPIO_CFG_INPUT
+    //MSP_EXP432P401R_INT4 pos-edge
     GPIOMSP432_P5_0 | GPIO_CFG_IN_PD | GPIO_CFG_IN_INT_RISING,//GPIO_CFG_INPUT
 
     // MSP_EXP432P401R_SDSPI_CS
     GPIOMSP432_P7_6 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_LOW | GPIO_CFG_OUT_HIGH,
+
+    // MSP_EXP432P401R_SDSPI_CS2 for ICM-20649 test
+    GPIOMSP432_P7_7 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_LOW | GPIO_CFG_OUT_HIGH,
 };
 
 /*
@@ -521,11 +526,11 @@ PWMTimerMSP432_Object pwmTimerMSP432Objects[MSP_EXP432P401R_PWMCOUNT];
 const PWMTimerMSP432_HWAttrsV2 pwmTimerMSP432HWAttrs[MSP_EXP432P401R_PWMCOUNT] = {
     {
         .clockSource = TIMER_A_CLOCKSOURCE_SMCLK,
-        .pwmPin = PWMTimerMSP432_P2_1_TA1CCR1A
+        .pwmPin = PWMTimerMSP432_P2_0_TA1CCR1A
     },
     {
         .clockSource = TIMER_A_CLOCKSOURCE_SMCLK,
-        .pwmPin = PWMTimerMSP432_P2_2_TA1CCR2A
+        .pwmPin = PWMTimerMSP432_P3_0_TA1CCR2A
     }
 };
 
@@ -630,20 +635,21 @@ const SPIMSP432DMA_HWAttrsV1 spiMSP432DMAHWAttrs[MSP_EXP432P401R_SPICOUNT] = {
         .minDmaTransferSize = 10   //from fatsd.c example
 
     },
-    {//for ads1292r
-        .baseAddr = EUSCI_B2_BASE,
-        .bitOrder = EUSCI_B_SPI_MSB_FIRST,
-        .clockSource = EUSCI_B_SPI_CLOCKSOURCE_SMCLK,
+    {//for icm20649
+        .baseAddr = EUSCI_A1_BASE,
+        .bitOrder = EUSCI_A_SPI_MSB_FIRST,
+        .clockSource = EUSCI_A_SPI_CLOCKSOURCE_SMCLK,
         .defaultTxBufValue = 0,
         .dmaIntNum = INT_DMA_INT2,
         .intPriority = (~0),//(~0),0x40
-        .rxDMAChannelIndex = DMA_CH5_EUSCIB2RX0,
-        .txDMAChannelIndex = DMA_CH4_EUSCIB2TX0,
-        .clkPin  = SPIMSP432DMA_P3_5_UCB2CLK,
-        .simoPin = SPIMSP432DMA_P3_6_UCB2SIMO,
-        .somiPin = SPIMSP432DMA_P3_7_UCB2SOMI,
-        .stePin  = SPIMSP432DMA_P3_4_UCB2STE,
-        .pinMode  = EUSCI_SPI_4PIN_UCxSTE_ACTIVE_LOW//EUSCI_SPI_3PIN
+        .rxDMAChannelIndex = DMA_CH3_EUSCIA1RX,
+        .txDMAChannelIndex = DMA_CH2_EUSCIA1TX,
+        .clkPin  = SPIMSP432DMA_P2_1_UCA1CLK,
+        .simoPin = SPIMSP432DMA_P2_2_UCA1SIMO,
+        .somiPin = SPIMSP432DMA_P2_3_UCA1SOMI,
+        .stePin  = SPIMSP432DMA_P2_0_UCA1STE,
+        .pinMode  = EUSCI_SPI_3PIN,//EUSCI_SPI_3PIN
+        .minDmaTransferSize = 10
     }
 };
 
@@ -655,8 +661,8 @@ const SPI_Config SPI_config[MSP_EXP432P401R_SPICOUNT] = {
     },
     {
         .fxnTablePtr = &SPIMSP432DMA_fxnTable,
-        .object = &spiMSP432DMAObjects[MSP_EXP432P401R_SPIB2],
-        .hwAttrs = &spiMSP432DMAHWAttrs[MSP_EXP432P401R_SPIB2]
+        .object = &spiMSP432DMAObjects[MSP_EXP432P401R_SPIA1],
+        .hwAttrs = &spiMSP432DMAHWAttrs[MSP_EXP432P401R_SPIA1]
     }
 };
 
@@ -846,7 +852,7 @@ const uint8_t Watchdog_count = MSP_EXP432P401R_WATCHDOGCOUNT;
 
 /*
  *  =============================== TMP007 =================================
- */
+
 #include <ti/sail/tmp007/tmp007.h>
 
 TMP007_Object TMP007_object[MSP_EXP432P401R_TMP007COUNT];
@@ -866,9 +872,9 @@ const TMP007_Config TMP007_config[] = {
     {NULL, NULL}
 };
 
-/*
+
  *  =============================== OPT3001 ===============================
- */
+
 #include <ti/sail/opt3001/opt3001.h>
 
 OPT3001_Object OPT3001_object[MSP_EXP432P401R_OPT3001COUNT];
@@ -887,3 +893,4 @@ const OPT3001_Config OPT3001_config[] = {
     },
     {NULL, NULL}
 };
+*/

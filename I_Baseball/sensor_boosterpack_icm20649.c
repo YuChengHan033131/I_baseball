@@ -45,7 +45,7 @@
 #define DISPLAY_DISABLE
 #include <Profile/baseball6xs_service.h>
 #include <sensor_boosterpack_icm20649.h>
-#include <sensor_driver/icm20649.h>
+#include <sensor_driver/icm20649_I2C.h>
 #include "flashctrl.h"
 #include "BLEsend.h"
 #include "sensor_configuration.h"
@@ -174,7 +174,7 @@ void SensorICM20649_Deactivate(void)
     /* Deactivate task */
     pthread_mutex_lock(&lock);
     /* Disable the ICM20649 sensor */
-    sensorICM20649_enable(0x3F);
+    sensorICM20649_enable_I2C(0x3F);
     pthread_mutex_unlock(&lock);
 }
 
@@ -185,7 +185,7 @@ void SensorICM20649_Activate(void)
    // printf("Active\n");
     pthread_mutex_lock(&lock);
     /* Enable the ICM20649 sensor */
-    sensorICM20649_enable(0);
+    sensorICM20649_enable_I2C(0);
     pthread_mutex_unlock(&lock);
 }
 
@@ -202,7 +202,7 @@ static void movementTaskInit(void)
  //   printf("Init\n");
     /* Initialize characteristics and sensor driver */
     //sensorPeriod = ICM20649_DEFAULT_PERIOD;
-    success = SensorICM20649_init();
+    success = SensorICM20649_init_I2C();
 #ifndef DISPLAY_DISABLE
     if(success) Display_print0(displayOut, 0, 0, "ICM20649 initial success");
 #endif
@@ -226,28 +226,28 @@ static void movementTaskInit(void)
 static void icm20649Setup (void)
 {
     /* Set the Interrupt if new data is ready */
-    SensorICM20649_enable_int();
+    SensorICM20649_enable_int_I2C();
 #ifndef DISPLAY_DISABLE
     Display_print0(displayOut, 0, 0, "ICM20649 interrupt enable success");
 #endif
     /* Set the sample rate divider of the accelerometer */
-    sensorICM20649_accSetSMPLRT_DIV(0);
+    sensorICM20649_accSetSMPLRT_DIV_I2C(0);
     /* Set the DLPF Bandwidth of the accelerometer */
-    sensorICM20649_accSetBW(ACC_BW_5_7);
+    sensorICM20649_accSetBW_I2C(ACC_BW_5_7);
     /* Set the range of the accelerometer */
   //  SensorICM20649_accSetsample(0);
-    SensorICM20649_accSetRange(ACC_RANGE_30G);
+    SensorICM20649_accSetRange_I2C(ACC_RANGE_30G);
   //  SensorICM20649_accSetSample(0);
 
 
 
     /* Set the sample rate divider of the gyroscope */
-    sensorICM20649_gyroSetSMPLRT_DIV(0);
+    sensorICM20649_gyroSetSMPLRT_DIV_I2C(0);
     /* Set the DLPF Bandwidth of the gyroscope */
-  sensorICM20649_gyroSetBW(GYRO_BW_5_7);
+  sensorICM20649_gyroSetBW_I2C(GYRO_BW_5_7);
     /* Set the range of the gyroscope */
   //  SensorICM20649_gyroSetsample(0);
-    SensorICM20649_gyroSetRange(GYRO_RANGE_4000DPS);
+    SensorICM20649_gyroSetRange_I2C(GYRO_RANGE_4000DPS);
   //  SensorICM20649_accSetSample(0);
 
 
@@ -321,8 +321,8 @@ static void* icmInterruptHandlerTask(void *arg0)
         Display_print0(displayOut, 0, 0, "ICM20649 Interrup!");
 #endif
 
-        SensorICM20649_accRead(data_acc);
-        SensorICM20649_gyroRead(data_gyro);
+        SensorICM20649_accRead_I2C(data_acc);
+        SensorICM20649_gyroRead_I2C(data_gyro);
 
         //data_u8[0] - x->MSB
         //data_u8[1] - x->LSB
@@ -431,42 +431,42 @@ static void icm20649Callback(uint_least8_t index)
 
      uint8_t sampleRateDivider=0;
      /* Set the sample rate divider of the accelerometer */
-     sensorICM20649_accSetSMPLRT_DIV(sampleRateDivider);
+     sensorICM20649_accSetSMPLRT_DIV_I2C(sampleRateDivider);
      /* Set the DLPF Bandwidth of the accelerometer */
-     sensorICM20649_accSetBW(ACC_BW_5_7);
+     sensorICM20649_accSetBW_I2C(ACC_BW_5_7);
      /* Set the range of the accelerometer */
-     SensorICM20649_accSetRange(ACC_RANGE_30G);
+     SensorICM20649_accSetRange_I2C(ACC_RANGE_30G);
      /* Set the sample rate divider of the gyroscope */
-     sensorICM20649_gyroSetSMPLRT_DIV(sampleRateDivider);
+     sensorICM20649_gyroSetSMPLRT_DIV_I2C(sampleRateDivider);
      /* Set the DLPF Bandwidth of the gyroscope */
-     sensorICM20649_gyroSetBW(GYRO_BW_5_7);
+     sensorICM20649_gyroSetBW_I2C(GYRO_BW_5_7);
      /* Set the range of the gyroscope */
-     SensorICM20649_gyroSetRange(GYRO_RANGE_4000DPS);
+     SensorICM20649_gyroSetRange_I2C(GYRO_RANGE_4000DPS);
      /* The accel sensor needs max 30ms, the gyro max 35ms to fully start */
      usleep(50000);
 
      /*enable FIFO*/
-     writeReg(REG_BANK_SEL, BANK_0);
-     writeReg(USER_CTRL, 0x40);
+     writeReg_I2C(REG_BANK_SEL_I2C, BANK_0_I2C);
+     writeReg_I2C(USER_CTRL_I2C, 0x40);
 
      //wake-on motion threshold
-     writeReg(REG_BANK_SEL, BANK_2);
-     writeReg(ACCEL_WOM_THR, 0x04);//LSB=4mg ,range=0~1020mg, i.e. 16mg
+     writeReg_I2C(REG_BANK_SEL_I2C, BANK_2_I2C);
+     writeReg_I2C(ACCEL_WOM_THR_I2C, 0x04);//LSB=4mg ,range=0~1020mg, i.e. 16mg
 
      while(1){
          //enable wake-on motion interrupt
-         writeReg(REG_BANK_SEL, BANK_0);
-         writeReg(INT_ENABLE, 0x08);
+         writeReg_I2C(REG_BANK_SEL_I2C, BANK_0_I2C);
+         writeReg_I2C(INT_ENABLE_I2C, 0x08);
 
          //enable wake-on motion logic & setting
-         writeReg(REG_BANK_SEL, BANK_2);
-         writeReg(ACCEL_INTEL_CTRL, 0x03);//logic on, setting compare to previous value
+         writeReg_I2C(REG_BANK_SEL_I2C, BANK_2_I2C);
+         writeReg_I2C(ACCEL_INTEL_CTRL_I2C, 0x03);//logic on, setting compare to previous value
 
          //turn on low power mode
-         writeReg(REG_BANK_SEL, BANK_0);
-         readReg(PWR_MGMT_1,&data,1);
+         writeReg_I2C(REG_BANK_SEL_I2C, BANK_0_I2C);
+         readReg_I2C(PWR_MGMT_1_I2C,&data,1);
          data |= 0x20;
-         writeReg(PWR_MGMT_1, data);
+         writeReg_I2C(PWR_MGMT_1_I2C, data);
 
          do{
              Display_printf(displayOut,0,0,"sleeping");
@@ -483,21 +483,21 @@ static void icm20649Callback(uint_least8_t index)
          }while(!sensorOn);//back to sleeping state if sensor is turn off by BLE command
 
          //test: see interrupt status
-         /*writeReg(REG_BANK_SEL, BANK_0);
-         readReg(INT_STATUS, &data,1);*/
+         /*writeReg_I2C(REG_BANK_SEL, BANK_0);
+         readReg_I2C(INT_STATUS, &data,1);*/
 
          //disable wake-on motion interrupt
-         writeReg(REG_BANK_SEL, BANK_0);
-         writeReg(INT_ENABLE, 0x00);
+         writeReg_I2C(REG_BANK_SEL_I2C, BANK_0_I2C);
+         writeReg_I2C(INT_ENABLE_I2C, 0x00);
          //disable wake-on motion logic
-         writeReg(REG_BANK_SEL, BANK_2);
-         writeReg(ACCEL_INTEL_CTRL, 0x00);
+         writeReg_I2C(REG_BANK_SEL_I2C, BANK_2_I2C);
+         writeReg_I2C(ACCEL_INTEL_CTRL_I2C, 0x00);
 
          //turn off low power mode
-         writeReg(REG_BANK_SEL, BANK_0);
-         readReg(PWR_MGMT_1,&data,1);
+         writeReg_I2C(REG_BANK_SEL_I2C, BANK_0_I2C);
+         readReg_I2C(PWR_MGMT_1_I2C,&data,1);
          data &= 0xDF;
-         writeReg(PWR_MGMT_1,data);
+         writeReg_I2C(PWR_MGMT_1_I2C,data);
 
          /*reset value in semaphore*///since may have multiple WOM interrupt
          sem_getvalue(&icm20649Sem,&data);
@@ -508,35 +508,35 @@ static void icm20649Callback(uint_least8_t index)
          openflash();
 
          /*reset FIFO*/
-         writeReg(REG_BANK_SEL, BANK_0);
-         writeReg(FIFO_RST, 0x0f);//not sure which value can actually reset
-         writeReg(REG_BANK_SEL, BANK_0);
-         writeReg(FIFO_RST, 0x00);
+         writeReg_I2C(REG_BANK_SEL_I2C, BANK_0_I2C);
+         writeReg_I2C(FIFO_RST_I2C, 0x0f);//not sure which value can actually reset
+         writeReg_I2C(REG_BANK_SEL_I2C, BANK_0_I2C);
+         writeReg_I2C(FIFO_RST_I2C, 0x00);
 
          /*enable acc & gyro write to FIFO*/
-         writeReg(REG_BANK_SEL, BANK_0);
-         writeReg(FIFO_EN_2, 0x1e);//acc & gyr
+         writeReg_I2C(REG_BANK_SEL_I2C, BANK_0_I2C);
+         writeReg_I2C(FIFO_EN_2_I2C, 0x1e);//acc & gyr
 
          sample = true;
          while(sample){
              //enable FIFO water mark to interrupt 1
-             writeReg(REG_BANK_SEL, BANK_0);
-             writeReg(INT_ENABLE3, 0x01);
+             writeReg_I2C(REG_BANK_SEL_I2C, BANK_0_I2C);
+             writeReg_I2C(INT_ENABLE3_I2C, 0x01);
 
              sem_wait(&icm20649Sem);
              //test: disable data write after reach FIFO water mark
              /*disable acc & gyro write to FIFO*/
-             // writeReg(REG_BANK_SEL, BANK_0);
-             // writeReg(FIFO_EN_2, 0x00);
+             // writeReg_I2C(REG_BANK_SEL, BANK_0);
+             // writeReg_I2C(FIFO_EN_2, 0x00);
 
              for(j=0;j<2052;j=j+12){//2052=6 axis sensor*2 bytes*171 times of sample = at least amount of data in FIFO
                  /*useless
                   * read data number in FIFO
-                writeReg(REG_BANK_SEL, BANK_0);
-                readReg(FIFO_COUNT_H, &sensordata[16], 2);*/
+                writeReg_I2C(REG_BANK_SEL, BANK_0);
+                readReg_I2C(FIFO_COUNT_H, &sensordata[16], 2);*/
 
-                writeReg(REG_BANK_SEL, BANK_0);
-                readReg(FIFO_R_W, &sensordata[0], 12);
+                writeReg_I2C(REG_BANK_SEL_I2C, BANK_0_I2C);
+                readReg_I2C(FIFO_R_W_I2C, &sensordata[0], 12);
                 //order: acc x_H//acc x_L//acc y_H//acc y_L//acc z_H//acc z_L///gyr x_H//gyr x_L//gyr y_H;//gyr y_L//gyr z_H//gyr z_L
                 //usleep(10000);
                 //enqueue(sensordata);
@@ -598,8 +598,8 @@ static void icm20649Callback(uint_least8_t index)
          }
 
          /*disable acc & gyro write to FIFO*/
-         writeReg(REG_BANK_SEL, BANK_0);
-         writeReg(FIFO_EN_2, 0x00);//acc & gyr
+         writeReg_I2C(REG_BANK_SEL_I2C, BANK_0_I2C);
+         writeReg_I2C(FIFO_EN_2_I2C, 0x00);//acc & gyr
 
          //sem_wait(&BLEconnected);
          //send all of the flash data through BLE

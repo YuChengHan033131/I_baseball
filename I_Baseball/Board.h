@@ -92,7 +92,7 @@ extern "C" {
 #define Board_BUTTON0               MSP_EXP432P401R_S1
 #define Board_BUTTON1               MSP_EXP432P401R_S2
 #define Board_LED0                  MSP_EXP432P401R_LED1
-#define Board_LED1                  MSP_EXP432P401R_LED_BLUE
+#define Board_LED1                  MSP_EXP432P401R_LED_RED
 
 #ifdef ECG_MSP432
 #define Board_MRDY                  MSP_EXP432P401R_MRDY
@@ -120,7 +120,7 @@ extern "C" {
 #define Board_PWM1                  MSP_EXP432P401R_PWM_TA1_2
 
 #define Board_SPI0                  MSP_EXP432P401R_SPIB0
-#define Board_SPI1                  MSP_EXP432P401R_SPIB2 //ECG ADS1292R
+#define Board_SPI1                  MSP_EXP432P401R_SPIA1 //ECG ADS1292R
 #define Board_SDFatFS0              MSP_EXP432P401R_SDSPI0
 
 #define Board_Timer0                MSP_EXP432P401R_TIMER_T32_0
@@ -137,7 +137,7 @@ extern "C" {
 /* Board specific I2C addresses */
 #define Board_TMP006_ADDR           (0x44)
 #define Board_TMP007_ADDR           (0x40)
-#define Board_BHI160                (0x28)
+//#define Board_BHI160                (0x28)
 
 /* SENSORBP Interrupt */
 //#define Board_SensorBP_INT1         MSP_EXP432P401R_SENSORBP_INT1
@@ -145,9 +145,11 @@ extern "C" {
 //i2c sensor interrupt
 #define ICM20649_INT                MSP_EXP432P401R_INT1
 #define BHI160_INT                  MSP_EXP432P401R_INT2
-#define BMA253_INT                  MSP_EXP432P401R_INT3
+#define ICM20649_INT3               MSP_EXP432P401R_INT3
+#define BMA253_INT                  MSP_EXP432P401R_INT4
 
 #define FLASH_nCS                   MSP_EXP432P401R_SDSPI_CS
+#define ICM20649_nCS                MSP_EXP432P401R_SDSPI_CS2
 
 #ifdef __cplusplus
 }
