@@ -29,8 +29,8 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * --/COPYRIGHT--*/
-#ifndef SENSOR_BOOSTERPACK_ICM20649_I2C_H_
-#define SENSOR_BOOSTERPACK_ICM20649_I2C_H_
+#ifndef SENSOR_BOOSTERPACK_ICM20649_H_
+#define SENSOR_BOOSTERPACK_ICM20649_H_
 
 /*******************************************************************************
  *                                INCLUDES
@@ -48,11 +48,13 @@
 
 /* Task configuration */
 #define MOVEMENT_TASK_PRIORITY    1
-#define MOVEMENT_TASK_STACK_SIZE  1024
+#define MOVEMENT_TASK_STACK_SIZE  2048
 
 /* Commands that are sent to/from ISR context to task context */
 #define MOVEMENT_SENSOR_START   0x01
 #define MOVEMENT_SENSOR_STOP    0x02
+
+#define ICM_EVT_PERIOD              888
 
 /*******************************************************************************
  *                                FUNCTIONS
@@ -60,30 +62,22 @@
 /*
  * Create the Movement sensor task
  */
-void SensorICM20649_createTask_I2C(void);
+void SensorICM20649_createTask(void);
 
 /*
  * Task Event Processor for characteristic changes
  */
-extern void SensorICM20649_Deactivate_I2C(void);
-extern void SensorICM20649_Activate_I2C(void);
+extern void SensorICM20649_Deactivate(void);
+extern void SensorICM20649_Activate(bool div);
 //extern void SensorICM20649_processCharChangeEvt(uint8_t paramID);
-
 
 /*
  * Task Event Processor for the BLE Application
  */
 //extern void SensorBPMov_reset(void);
 
-/******************************
- * test functions
- */
-extern  void test_SensorICM20649_createTask(void);
-extern void* test_icm2049_TaskFxn(void *arg0);
-extern void test_icm20649Setup (uint8_t sampleRateDivider);
-
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* SENSOR_BOOSTERPACK_ICM20649_I2C_H_ */
+#endif /* SENSOR_BOOSTERPACK_ICM20649_H_ */

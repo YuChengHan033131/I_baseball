@@ -62,8 +62,8 @@
 /* GLOBAL variable*/
 extern sem_t BLEconnected;
 /* Task setup */
-pthread_t icm20649Task;
-pthread_t icmSensorTask;
+pthread_t icm20649Task_I2C;
+pthread_t icmSensorTask_I2C;
 static pthread_mutex_t lock;
 static pthread_cond_t cond;
 static volatile bool sampleData;
@@ -114,7 +114,7 @@ static void icm20649Callback(uint_least8_t index);
  *
  * @return  none
  ******************************************************************************/
-void SensorICM20649_createTask(void)
+void SensorICM20649_createTask_I2C(void)
 {
     pthread_attr_t pAttrs;
     struct sched_param priParam;
@@ -143,14 +143,14 @@ void SensorICM20649_createTask(void)
         while(1);
     }
 
-    retc = pthread_create(&icm20649Task, &pAttrs, movementTaskFxn, NULL);
+    retc = pthread_create(&icm20649Task_I2C, &pAttrs, movementTaskFxn, NULL);
 
     if (retc != 0)
     {
         while(1);
     }
 
-    retc = pthread_create(&icmSensorTask, &pAttrs, icmInterruptHandlerTask, NULL);
+    retc = pthread_create(&icmSensorTask_I2C, &pAttrs, icmInterruptHandlerTask, NULL);
 
     if (retc != 0)
     {
@@ -168,7 +168,7 @@ void SensorICM20649_createTask(void)
  * @brief   SensorTag Movement event handling
  *
  ******************************************************************************/
-void SensorICM20649_Deactivate(void)
+void SensorICM20649_Deactivate_I2C(void)
 {
   //  printf("icmclose\n");
     /* Deactivate task */
@@ -178,7 +178,7 @@ void SensorICM20649_Deactivate(void)
     pthread_mutex_unlock(&lock);
 }
 
-void SensorICM20649_Activate(void)
+void SensorICM20649_Activate_I2C(void)
 {
     /* Activate task */
 
@@ -396,7 +396,7 @@ static void icm20649Callback(uint_least8_t index)
     pthread_attr_setschedparam(&pAttrs, &priParam);
     pthread_attr_setstacksize(&pAttrs, MOVEMENT_TASK_STACK_SIZE);
 
-    pthread_create(&icm20649Task, &pAttrs, test_icm2049_TaskFxn, NULL);
+    pthread_create(&icm20649Task_I2C, &pAttrs, test_icm2049_TaskFxn, NULL);
 
     /* Initializing the semaphore */
     sem_init(&icm20649Sem,0,0);
@@ -427,7 +427,7 @@ static void icm20649Callback(uint_least8_t index)
 
      /* Initialize the task */
      movementTaskInit(); //include initialize icm20649 register, sleep mode
-     SensorICM20649_Activate();//leave sleep mode & activate acc, gyro
+     SensorICM20649_Activate_I2C();//leave sleep mode & activate acc, gyro
 
      uint8_t sampleRateDivider=0;
      /* Set the sample rate divider of the accelerometer */
