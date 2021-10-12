@@ -97,7 +97,7 @@ static UUIDType_t sensorService =
 static uint8_t sensorData[BASEBALL6xs_DATA_LEN];
 
 /* Characteristic Value: configuration */
-static uint8_t sensorCfg = 0;
+static uint32_t sensorCfg = 0;
 
 /* Characteristic Value: period */
 static uint16_t sensorPeriod = (BASEBALL6xs_MIN_UPDATE_PERIOD
@@ -348,7 +348,7 @@ uint8_t Baseball6xs_getParameter(uint8_t param, void *value)
         break;
 
     case BASEBALL6xs_CONF:
-        *((uint8_t*) value) = sensorCfg;
+        *((uint32_t*) value) = sensorCfg;
         break;
 
     case BASEBALL6xs_PERI:
@@ -487,7 +487,7 @@ static uint8_t sensor_WriteAttrCB(void *context, uint16_t connectionHandle,
         case PROFILE_VALUE:
             if (len == sizeof(sensorCfg))
             {
-                sensorCfg = pData[0];
+                sensorCfg = (pData[0]<<24)|(pData[1]<<16)|(pData[2]<<8)|(pData[3]);
                 status = BLE_PROFILE_SUCCESS;
                 notifyApp = BASEBALL6xs_CONF;
             }
