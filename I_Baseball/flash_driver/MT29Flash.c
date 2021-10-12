@@ -21,6 +21,7 @@
 
 extern Display_Handle displayOut;
 SemaphoreP_Handle lockSem;
+//pthread_mutex_t flashMutex = PTHREAD_MUTEX_INITIALIZER;
 uint8_t EOD[12]={0x80,0x01,0x80,0x01,0x80,0x01,0x80,0x04,0x80,0x01,0x80,0x01};
 
 //SPI_Handle SDSPI_open(SPI_Handle handle, SD_Params *params);

@@ -277,9 +277,7 @@ static void getdata(uint8_t *result)
  * */
 bool outputflashdata(uint16_t set_number)
 {
-    pthread_mutex_lock(&lockflash);
     output_flash_data(spihandle, set_number);
-    pthread_mutex_unlock(&lockflash);
     return true;
 }
 
@@ -304,10 +302,8 @@ void flasheraseall(void)
  * */
 uint16_t total_set_number(void){
 
-    pthread_mutex_lock(&lockflash);
     //read page 0 of flash to count set_number
     FlashPageRead(spihandle, 0, page_zero);
-    pthread_mutex_unlock(&lockflash);
 
     uint16_t i,num=0;
     for(i=4;i<=PAGE_DATA_SIZE+4;i=i+3){
